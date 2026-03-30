@@ -83,6 +83,15 @@
   .wtag-name-input::placeholder { color: var(--text-faint); }
   .wtag-rm { font-size: 13px; color: var(--text-faint); cursor: pointer; background: none; border: none; padding: 0; line-height: 1; }
   .wtag-rm:hover { color: var(--red); }
+  .ji-fields { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 10px; }
+  .ji-field { display: flex; flex-direction: column; gap: 3px; }
+  .ji-field label { font-size: 10px; font-weight: 600; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.04em; }
+  .ji-field select { font-size: 13px; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; }
+  .ji-field select:focus { border-color: var(--accent-mid); }
+  .ji-toggle { display: flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); user-select: none; }
+  .ji-toggle.on { background: var(--amber-light); color: var(--amber); border-color: #d4a843; }
+  .ji-calc { font-size: 14px; font-weight: 600; color: var(--accent); padding: 6px 0; min-width: 120px; }
+  .ji-calc-detail { font-size: 11px; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-bottom: 8px; }
   .addjob-btn { margin-top: 10px; font-size: 12px; padding: 7px 14px; cursor: pointer; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); font-family: 'DM Sans', sans-serif; display: block; width: 100%; text-align: center; transition: all 0.12s; }
   .addjob-btn:hover { background: var(--bg); color: var(--text); }
   input[type=text], input[type=number], input[type=time] { font-size: 13px; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.12s; }
@@ -238,6 +247,58 @@ const RATE_FULL=600,RATE_OT=300,MAX_W=15;
 const SCHED=[{l:'7–9:45',t:'w',m:165},{l:'Break',t:'b',m:15},{l:'10–1:00',t:'w',m:180},{l:'Lunch',t:'b',m:60},{l:'2–3:30',t:'w',m:90},{l:'Tea',t:'b',m:15},{l:'3:45–5',t:'w',m:75},{l:'5–7 OT',t:'o',m:120}];
 const TOTAL_MINS=SCHED.reduce((s,x)=>s+x.m,0);
 
+// ===== OFFSITE CLIENT RATES =====
+const CLIENTS=[
+  {id:'synthite',name:'Synthite'},
+  {id:'spice',name:'Spice'},
+  {id:'elton',name:'Elton'},
+  {id:'english_india',name:'English India'},
+  {id:'herbal_up',name:'Herbal Up'},
+  {id:'herbal_down',name:'Herbal Down'},
+  {id:'celery',name:'Celery'},
+  {id:'other',name:'Other (manual)'}
+];
+
+function calcJobAmount(j){
+  const client=j.client||'other';
+  const size=j.containerSize||'20';
+  const pallets=parseInt(j.pallets)||0;
+  const isJumbo=j.isJumbo||false;
+  const isMix=j.isMix||false;
+
+  if(client==='other') return parseFloat(j.manualAmount)||0;
+
+  // English India — per pallet ₹90, with jumbo option
+  if(client==='english_india'){
+    let amt=pallets*90;
+    if(isJumbo) amt+=(size==='20'?300:500);
+    return amt;
+  }
+
+  // Celery — ₹100 per pallet
+  if(client==='celery') return pallets*100;
+
+  // Spice — flat rate
+  if(client==='spice') return size==='20'?1800:3200;
+
+  // Synthite, Elton, Herbal Up, Herbal Down — same slab logic
+  if(['synthite','elton','herbal_up','herbal_down'].includes(client)){
+    // Mix load — per pallet ₹90
+    if(isMix) return pallets*90;
+    if(size==='20'){
+      if(pallets<=10) return 1200;
+      if(pallets<=15) return 1400;
+      return 1800;
+    } else {
+      // 40ft: >30 pallets = 3200, ≤30 = ₹90/pallet
+      if(pallets>30) return 3200;
+      return pallets*90;
+    }
+  }
+
+  return 0;
+}
+
 let weekOffset=0;
 let workers=[{id:1,name:'Worker 1'},{id:2,name:'Worker 2'}];
 let nextWId=3,nextJId=1,nextCId=1;
@@ -332,17 +393,64 @@ function renderDaily(){
   html+=`<div class="panel"><div class="phdr"><div class="ptitle">Offsite Jobs <span style="font-size:12px;font-weight:400;color:var(--text-muted)">— ${DAYS[di]}, ${fmt(dates[di])}</span></div></div>`;
   if(dd.jobs.length===0)html+=`<div class="hint">No offsite jobs yet. Click below to add one.</div>`;
   dd.jobs.forEach(j=>{
+    // Auto-calculate amount from client config
+    const calcAmt=calcJobAmount(j);
+    j.amount=calcAmt;
     const allWIds=[...j.workerIds,...(j.customWorkers||[]).map(c=>c.id)];
-    const per=allWIds.length>0?Math.round((parseFloat(j.amount)||0)/allWIds.length):0;
+    const per=allWIds.length>0?Math.round(calcAmt/allWIds.length):0;
     const cw=j.customWorkers||[];
+    const cl=j.client||'other';
+    const isManual=cl==='other';
+    const showPallets=['synthite','elton','herbal_up','herbal_down','english_india','celery'].includes(cl);
+    const showContainer=cl!=='other';
+    const showJumbo=cl==='english_india';
+    const showMix=['synthite','elton','herbal_up','herbal_down'].includes(cl);
+
+    // Build rate detail string
+    let rateDetail='';
+    if(!isManual && calcAmt>0){
+      const sz=j.containerSize==='20'?'20ft':'40ft';
+      const plt=parseInt(j.pallets)||0;
+      if(cl==='english_india'){
+        rateDetail=`${plt} plt × ₹90 = ₹${plt*90}`;
+        if(j.isJumbo) rateDetail+=` + Jumbo ₹${j.containerSize==='20'?300:500}`;
+      } else if(cl==='celery'){
+        rateDetail=`${plt} plt × ₹100`;
+      } else if(cl==='spice'){
+        rateDetail=`${sz} flat rate`;
+      } else if(j.isMix){
+        rateDetail=`Mix load: ${plt} plt × ₹90`;
+      } else if(j.containerSize==='20'){
+        rateDetail=`${sz}: ${plt<=10?'≤10 plt slab':plt<=15?'11-15 plt slab':'16+ plt slab'}`;
+      } else {
+        rateDetail=`${sz}: ${plt>30?'>30 plt flat':'≤30 plt × ₹90'}`;
+      }
+    }
+
     html+=`<div class="job-entry">
-      <div class="ji-top">
-        <input type="text" placeholder="Job description" value="${(j.name||'').replace(/"/g,'&quot;')}" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-key="name" style="flex:2;min-width:130px;">
-        <input type="number" min="0" placeholder="Total &#8377;" value="${j.amount||''}" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-key="amount" class="ji-amt">
-        <div class="ji-per">${allWIds.length>0?`&#8377;${per.toLocaleString()} each &middot; ${allWIds.length} worker${allWIds.length>1?'s':''}`:''}</div>
+      <div class="ji-top" style="margin-bottom:6px;">
+        <div class="ji-field"><label>Client</label><select data-action="jobfield" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-key="client">
+          ${CLIENTS.map(c=>`<option value="${c.id}"${c.id===cl?' selected':''}>${c.name}</option>`).join('')}
+        </select></div>
+        <input type="text" placeholder="Notes (optional)" value="${(j.name||'').replace(/"/g,'&quot;')}" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-key="name" data-action="jobtext" style="flex:1;min-width:100px;">
         <button class="rmbtn" data-action="rmjob" data-wk="${wk}" data-di="${di}" data-jid="${j.id}">×</button>
       </div>
-      <div class="wtags-row"><span class="wtags-lbl">Roster workers <small>(tap to select)</small></span></div>
+      <div class="ji-fields">
+        ${showContainer?`<div class="ji-field"><label>Container</label><select data-action="jobfield" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-key="containerSize">
+          <option value="20"${j.containerSize==='20'?' selected':''}>20ft</option>
+          <option value="40"${j.containerSize==='40'?' selected':''}>40ft</option>
+        </select></div>`:''}
+        ${showPallets?`<div class="ji-field"><label>Pallets</label><input type="number" min="0" placeholder="0" value="${j.pallets||''}" data-action="jobnum" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-key="pallets" style="width:70px;"></div>`:''}
+        ${showJumbo?`<div class="ji-toggle${j.isJumbo?' on':''}" data-action="togglejumbo" data-wk="${wk}" data-di="${di}" data-jid="${j.id}">${j.isJumbo?'✓ ':''} Jumbo</div>`:''}
+        ${showMix?`<div class="ji-toggle${j.isMix?' on':''}" data-action="togglemix" data-wk="${wk}" data-di="${di}" data-jid="${j.id}">${j.isMix?'✓ ':''}Mix Load</div>`:''}
+        ${isManual?`<div class="ji-field"><label>Total ₹</label><input type="number" min="0" placeholder="0" value="${j.manualAmount||''}" data-action="jobnum" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-key="manualAmount" style="width:90px;"></div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+        <div class="ji-calc">Total: &#8377;${calcAmt.toLocaleString()}</div>
+        ${rateDetail?`<div class="ji-calc-detail">${rateDetail}</div>`:''}
+        <div class="ji-per" style="margin-left:auto;">${allWIds.length>0?`&#8377;${per.toLocaleString()}/worker &middot; ${allWIds.length} worker${allWIds.length>1?'s':''}`:''}</div>
+      </div>
+      <div class="wtags-row"><span class="wtags-lbl">Workers <small>(tap to select)</small></span></div>
       <div class="wtags" style="margin-bottom:10px;">
         ${workers.length===0?`<span style="font-size:12px;color:var(--text-faint)">Add workers in roster tab first</span>`:''}
         ${workers.map(w=>`<div class="wtag${j.workerIds.includes(w.id)?' on':''}" data-action="togglew" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-wid="${w.id}">${w.name||'(unnamed)'}</div>`).join('')}
@@ -411,19 +519,41 @@ function renderDaily(){
 
 function attachDailyEvents(){
   document.querySelectorAll('.day-col[data-di]').forEach(el=>el.addEventListener('click',()=>{selDayIdx=parseInt(el.dataset.di);renderDaily();}));
-  document.querySelectorAll('input[data-key=name],input.ji-amt').forEach(el=>{
+  // Job text fields (notes)
+  document.querySelectorAll('input[data-action=jobtext]').forEach(el=>{
+    el.addEventListener('input',()=>{
+      const d=ensureDay(el.dataset.wk,parseInt(el.dataset.di));
+      const j=d.jobs.find(x=>x.id===parseInt(el.dataset.jid));
+      if(j) j[el.dataset.key]=el.value;
+    });
+    el.addEventListener('blur',()=>{ renderDaily(); });
+  });
+  // Job select fields (client, container size)
+  document.querySelectorAll('select[data-action=jobfield]').forEach(el=>{
+    el.addEventListener('change',()=>{
+      const d=ensureDay(el.dataset.wk,parseInt(el.dataset.di));
+      const j=d.jobs.find(x=>x.id===parseInt(el.dataset.jid));
+      if(j){ j[el.dataset.key]=el.value; renderDaily(); }
+    });
+  });
+  // Job number fields (pallets, manual amount)
+  document.querySelectorAll('input[data-action=jobnum]').forEach(el=>{
     el.addEventListener('input',()=>{
       const d=ensureDay(el.dataset.wk,parseInt(el.dataset.di));
       const j=d.jobs.find(x=>x.id===parseInt(el.dataset.jid));
       if(j){
         j[el.dataset.key]=el.value;
-        // Targeted update: refresh per-worker cost display without re-rendering
+        // Live update total display
         const entry=el.closest('.job-entry');
         if(entry){
+          const amt=calcJobAmount(j);
+          j.amount=amt;
           const allWIds=[...j.workerIds,...(j.customWorkers||[]).map(c=>c.id)];
-          const per=allWIds.length>0?Math.round((parseFloat(j.amount)||0)/allWIds.length):0;
+          const per=allWIds.length>0?Math.round(amt/allWIds.length):0;
+          const calcEl=entry.querySelector('.ji-calc');
+          if(calcEl) calcEl.innerHTML='Total: &#8377;'+amt.toLocaleString();
           const perEl=entry.querySelector('.ji-per');
-          if(perEl)perEl.innerHTML=allWIds.length>0?`&#8377;${per.toLocaleString()} each &middot; ${allWIds.length} worker${allWIds.length>1?'s':''}:`:'';
+          if(perEl) perEl.innerHTML=allWIds.length>0?`&#8377;${per.toLocaleString()}/worker &middot; ${allWIds.length} worker${allWIds.length>1?'s':''}:`:'';
         }
       }
     });
@@ -572,7 +702,7 @@ document.getElementById('nextWeek').addEventListener('click',()=>{weekOffset++;r
 document.getElementById('tab-daily').addEventListener('click',function(e){
   const el=e.target.closest('[data-action]');if(!el)return;
   const a=el.dataset.action,wk=el.dataset.wk,di=parseInt(el.dataset.di);
-  if(a==='addjob'){ensureDay(wk,di).jobs.push({id:nextJId++,name:'',amount:'',workerIds:[],customWorkers:[]});renderDaily();}
+  if(a==='addjob'){ensureDay(wk,di).jobs.push({id:nextJId++,client:'synthite',name:'',containerSize:'20',pallets:'',isJumbo:false,isMix:false,manualAmount:'',amount:'',workerIds:[],customWorkers:[]});renderDaily();}
   else if(a==='rmjob'){const d=ensureDay(wk,di);d.jobs=d.jobs.filter(j=>j.id!==parseInt(el.dataset.jid));renderDaily();}
   else if(a==='togglew'){
     const d=ensureDay(wk,di);const j=d.jobs.find(x=>x.id===parseInt(el.dataset.jid));const wid=parseInt(el.dataset.wid);
@@ -587,6 +717,12 @@ document.getElementById('tab-daily').addEventListener('click',function(e){
     const d=ensureDay(wk,di);const wid=parseInt(el.dataset.wid);
     const cur=d.attendance[wid]||defaultAtt();
     cur.status=cur.status==='full'?'half':cur.status==='half'?'custom':cur.status==='custom'?'absent':'full';renderDaily();
+  } else if(a==='togglejumbo'){
+    const d=ensureDay(wk,di);const j=d.jobs.find(x=>x.id===parseInt(el.dataset.jid));
+    if(j){j.isJumbo=!j.isJumbo;renderDaily();}
+  } else if(a==='togglemix'){
+    const d=ensureDay(wk,di);const j=d.jobs.find(x=>x.id===parseInt(el.dataset.jid));
+    if(j){j.isMix=!j.isMix;renderDaily();}
   } else if(a==='delworker'){deleteWorker(parseInt(el.dataset.wid));}
   else if(a==='addworker'){addWorkerGlobal();}
 });
