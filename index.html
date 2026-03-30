@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Factory Wage Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.1);
+    --border-strong: rgba(0,0,0,0.2);
+    --text: #1a1a1a;
+    --text-muted: #6b6b6b;
+    --text-faint: #a0a0a0;
+    --accent: #1a5c38;
+    --accent-light: #e8f5ed;
+    --accent-mid: #2d8653;
+    --blue: #1a3a6b;
+    --blue-light: #e8eef8;
+    --amber: #7a4f00;
+    --amber-light: #fdf5e0;
+    --red: #8b1a1a;
+    --red-light: #fdf0f0;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; }
+  .header { background: var(--accent); color: white; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .header-left h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+  .header-left p { font-size: 12px; opacity: 0.75; margin-top: 1px; }
+  .week-nav { display: flex; align-items: center; gap: 10px; }
+  .wbtn { width: 30px; height: 30px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .wbtn:hover { background: rgba(255,255,255,0.2); }
+  .week-label { font-size: 13px; font-weight: 500; color: white; white-space: nowrap; }
+  .print-btn { font-size: 12px; padding: 6px 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.4); border-radius: var(--radius-sm); background: rgba(255,255,255,0.15); color: white; font-family: 'DM Sans', sans-serif; font-weight: 500; }
+  .print-btn:hover { background: rgba(255,255,255,0.25); }
+  .main { max-width: 1100px; margin: 0 auto; padding: 20px 16px; }
+  .tabs { display: flex; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow); }
+  .tab { flex: 1; padding: 10px 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: none; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.15s; text-align: center; font-family: 'DM Sans', sans-serif; }
+  .tab:hover { background: var(--bg); color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--accent-light); }
+  .sched-bar { display: flex; border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px; height: 28px; box-shadow: var(--shadow); }
+  .seg { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; text-align: center; }
+  .sw { background: #c8dff5; color: #1a3a6b; } .sb { background: #dddbd4; color: #555; } .so { background: #a8dfc5; color: #0f4d30; }
+  .day-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 8px; margin-bottom: 16px; }
+  .day-col { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 10px 8px; cursor: pointer; transition: all 0.15s; box-shadow: var(--shadow); }
+  .day-col:hover { border-color: var(--accent-mid); }
+  .day-col.sel { border-color: var(--accent); background: var(--accent-light); }
+  .day-name { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .day-date { font-size: 11px; color: var(--text-faint); margin-bottom: 5px; }
+  .day-total { font-size: 13px; font-weight: 600; color: var(--accent); }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); }
+  .phdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .ptitle { font-size: 14px; font-weight: 600; color: var(--text); }
+  .wcount { font-size: 11px; color: var(--text-faint); background: var(--bg); padding: 2px 7px; border-radius: 20px; margin-left: 6px; border: 1px solid var(--border); }
+  .abtn { font-size: 12px; padding: 6px 12px; cursor: pointer; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 500; transition: all 0.12s; }
+  .abtn:hover { background: var(--bg); }
+  .abtn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .abtn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .abtn.primary:hover { background: var(--accent-mid); }
+  .hint { font-size: 13px; color: var(--text-faint); margin-bottom: 10px; font-style: italic; }
+  .job-entry { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .job-entry:last-child { border-bottom: none; padding-bottom: 0; }
+  .ji-top { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  .ji-per { font-size: 13px; font-weight: 600; color: var(--accent); min-width: 130px; }
+  .rmbtn { font-size: 20px; color: var(--text-faint); cursor: pointer; background: none; border: none; padding: 0 4px; line-height: 1; font-family: 'DM Sans', sans-serif; }
+  .rmbtn:hover { color: var(--red); }
+  .wtags-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; flex-wrap: wrap; gap: 4px; }
+  .wtags-lbl { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .wtags-lbl small { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--text-faint); }
+  .wtags-add { font-size: 11px; padding: 3px 9px; cursor: pointer; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); font-family: 'DM Sans', sans-serif; }
+  .wtags-add:hover { background: var(--bg); }
+  .wtags-add:disabled { opacity: 0.35; cursor: not-allowed; }
+  .wtags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .wtag { padding: 4px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); user-select: none; transition: all 0.12s; display: flex; align-items: center; gap: 5px; }
+  .wtag:hover { border-color: var(--accent-mid); }
+  .wtag.on { background: var(--accent-light); color: var(--accent); border-color: var(--accent-mid); font-weight: 500; }
+  .wtag-name-input { font-size: 12px; border: none; background: transparent; outline: none; color: var(--text); width: 80px; font-family: 'DM Sans', sans-serif; }
+  .wtag-name-input::placeholder { color: var(--text-faint); }
+  .wtag-rm { font-size: 13px; color: var(--text-faint); cursor: pointer; background: none; border: none; padding: 0; line-height: 1; }
+  .wtag-rm:hover { color: var(--red); }
+  .addjob-btn { margin-top: 10px; font-size: 12px; padding: 7px 14px; cursor: pointer; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); font-family: 'DM Sans', sans-serif; display: block; width: 100%; text-align: center; transition: all 0.12s; }
+  .addjob-btn:hover { background: var(--bg); color: var(--text); }
+  input[type=text], input[type=number], input[type=time] { font-size: 13px; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.12s; }
+  input:focus { border-color: var(--accent-mid); }
+  input[type=number] { width: 86px; }
+  input[type=time] { width: 96px; }
+  .wrow { display: grid; grid-template-columns: 36px 1fr; gap: 0 12px; padding: 12px 0; border-bottom: 1px solid var(--border); align-items: start; }
+  .wrow:last-child { border-bottom: none; }
+  .wav { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .wbody { display: flex; flex-direction: column; gap: 8px; }
+  .wline1 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .wname-disp { font-size: 14px; font-weight: 600; flex: 1; min-width: 80px; }
+  .wpay { font-size: 15px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+  .wfields { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+  .wfield { display: flex; flex-direction: column; gap: 3px; }
+  .wfield label { font-size: 10px; font-weight: 600; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.04em; }
+  .att-chip { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); user-select: none; white-space: nowrap; letter-spacing: 0.02em; transition: all 0.12s; }
+  .att-chip.full { background: var(--blue-light); color: var(--blue); border-color: #6a9fd8; }
+  .att-chip.half { background: var(--amber-light); color: var(--amber); border-color: #d4a843; }
+  .att-chip.absent { background: #fde8e8; color: #8b1a1a; border-color: #d47a7a; font-weight: 700; }
+  .att-chip.custom { background: #f3e8fd; color: #5b1a8b; border-color: #b07ad4; }
+  .sync-status { font-size: 11px; color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .sync-status.saving { color: #ffd966; }
+  .sync-status.saved { color: #a8dfc5; }
+  .sync-status.error { color: #ff9999; }
+  .sync-status.offline { color: rgba(255,255,255,0.5); }
+  .settings-btn { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 16px; cursor: pointer; padding: 4px; }
+  .settings-btn:hover { color: white; }
+  .setup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .setup-box { background: white; border-radius: var(--radius); padding: 24px; max-width: 500px; width: 100%; box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
+  .setup-box h2 { font-size: 16px; margin-bottom: 8px; }
+  .setup-box p { font-size: 13px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5; }
+  .setup-box input { width: 100%; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 13px; font-family: 'DM Mono', monospace; margin-bottom: 12px; }
+  .setup-box .btn-row { display: flex; gap: 8px; justify-content: flex-end; }
+  .setup-box button { padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); }
+  .setup-box button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .setup-steps { font-size: 12px; color: var(--text-muted); background: var(--bg); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 14px; line-height: 1.7; }
+  .setup-steps b { color: var(--text); }
+  .breakdown { font-size: 11px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+  .breakdown .adv { color: var(--red); }
+  .metric-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
+  .mc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+  .mc-label { font-size: 11px; font-weight: 600; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .mc-val { font-size: 22px; font-weight: 600; color: var(--text); }
+  .mc-val.green { color: var(--accent); } .mc-val.red { color: var(--red); }
+  .tbl-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--surface); }
+  th { text-align: left; font-weight: 600; font-size: 11px; color: var(--text-muted); padding: 10px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--bg); text-transform: uppercase; letter-spacing: 0.04em; }
+  td { padding: 10px 10px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr.total-row td { font-weight: 600; border-top: 1.5px solid var(--border-strong); background: var(--bg); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin: 0 1px; }
+  .dp { background: #378ADD; } .dh { background: #E5920A; } .dcu { background: #9B59B6; } .do2 { background: #1D9E75; } .da { background: #C8C6C0; }
+  .rrow { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 6px; }
+  .rrow:hover { border-color: var(--border-strong); }
+  .rname { font-size: 14px; font-weight: 500; border: none; background: transparent; color: var(--text); outline: none; flex: 1; font-family: 'DM Sans', sans-serif; }
+  .rname::placeholder { color: var(--text-faint); font-weight: 400; }
+  .help-panel { background: var(--accent-light); border: 1px solid var(--accent-mid); border-radius: var(--radius); padding: 16px; margin-top: 0; }
+  .help-panel .ptitle { color: var(--accent); margin-bottom: 10px; }
+  .help-panel p { font-size: 13px; color: var(--text-muted); line-height: 2; }
+  .help-panel b { color: var(--text); }
+  @media print {
+    .header-left p, .week-nav, .tabs, .sched-bar, .day-grid, .abtn, .addjob-btn, .rmbtn, .wtags-add, .att-chip, .print-btn, .wfields, .job-entry .wtags-row:last-child, .job-entry .wtags:last-child, #tab-daily .panel:last-child { display: none !important; }
+    body { background: white; }
+    .panel { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+    .main { padding: 0; max-width: 100%; }
+    .header { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .metric-cards { grid-template-columns: repeat(4,1fr); }
+  }
+  @media (max-width: 640px) {
+    .day-col { padding: 7px 4px; }
+    .day-name { font-size: 9px; }
+    .day-date { font-size: 9px; }
+    .metric-cards { grid-template-columns: repeat(2,1fr); }
+    .header { padding: 12px 14px; }
+    .header-left h1 { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>Factory Wage Calculator</h1>
+    <p>Daily & weekly wages — onsite & offsite</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <div class="week-nav">
+      <button class="wbtn" id="prevWeek">&#8249;</button>
+      <span class="week-label" id="weekLabel"></span>
+      <button class="wbtn" id="nextWeek">&#8250;</button>
+    </div>
+    <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+    <span class="sync-status offline" id="syncStatus">Local only</span>
+    <button class="settings-btn" id="settingsBtn" title="Cloud sync settings">&#9881;</button>
+  </div>
+</div>
+
+<div class="setup-overlay" id="setupOverlay" style="display:none">
+  <div class="setup-box">
+    <h2>Cloud Sync Setup</h2>
+    <p>Connect to Google Sheets so your data saves automatically and works from any device.</p>
+    <div class="setup-steps">
+      <b>1.</b> Open <a href="https://sheets.google.com" target="_blank">Google Sheets</a> &rarr; create a blank sheet<br>
+      <b>2.</b> Go to <b>Extensions &rarr; Apps Script</b><br>
+      <b>3.</b> Delete any code, paste the script shown below, then <b>Save</b><br>
+      <b>4.</b> Click <b>Deploy &rarr; New deployment</b><br>
+      <b>5.</b> Type = <b>Web app</b>, Access = <b>Anyone</b>, click <b>Deploy</b><br>
+      <b>6.</b> Copy the <b>Web app URL</b> and paste below
+    </div>
+    <details style="margin-bottom:14px;">
+      <summary style="font-size:12px;cursor:pointer;color:var(--accent);font-weight:600;">Show Apps Script code to copy</summary>
+      <pre style="font-size:11px;background:var(--bg);padding:10px;border-radius:var(--radius-sm);margin-top:8px;overflow-x:auto;white-space:pre-wrap;font-family:'DM Mono',monospace;border:1px solid var(--border);">function doGet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Data') || ss.insertSheet('Data');
+  var val = sheet.getRange('A1').getValue();
+  return ContentService
+    .createTextOutput(val || '{}')
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Data') || ss.insertSheet('Data');
+  sheet.getRange('A1').setValue(e.postData.contents);
+  return ContentService
+    .createTextOutput('ok')
+    .setMimeType(ContentService.MimeType.TEXT);
+}</pre>
+    </details>
+    <input type="text" id="scriptUrl" placeholder="Paste your Web app URL here...">
+    <div class="btn-row">
+      <button id="setupSkip">Use Offline</button>
+      <button class="primary" id="setupSave">Connect</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="tabs">
+    <button class="tab active" id="tab-daily-btn">Daily Entry</button>
+    <button class="tab" id="tab-weekly-btn">Weekly Summary</button>
+    <button class="tab" id="tab-roster-btn">Manage Workers</button>
+  </div>
+  <div id="tab-daily"></div>
+  <div id="tab-weekly" style="display:none"></div>
+  <div id="tab-roster" style="display:none"></div>
+</div>
+
+<script>
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const RATE_FULL=600,RATE_OT=300,MAX_W=15;
+const SCHED=[{l:'7–9:45',t:'w',m:165},{l:'Break',t:'b',m:15},{l:'10–1:00',t:'w',m:180},{l:'Lunch',t:'b',m:60},{l:'2–3:30',t:'w',m:90},{l:'Tea',t:'b',m:15},{l:'3:45–5',t:'w',m:75},{l:'5–7 OT',t:'o',m:120}];
+const TOTAL_MINS=SCHED.reduce((s,x)=>s+x.m,0);
+
+let weekOffset=0;
+let workers=[{id:1,name:'Worker 1'},{id:2,name:'Worker 2'}];
+let nextWId=3,nextJId=1,nextCId=1;
+let data={};
+let currentTab='daily';
+let selDayIdx=Math.max(0,new Date().getDay()===0?6:new Date().getDay()-1);
+
+function getMonday(offset){
+  const d=new Date();const day=d.getDay();
+  d.setDate(d.getDate()-day+(day===0?-6:1)+offset*7);d.setHours(0,0,0,0);return d;
+}
+function weekDates(){const m=getMonday(weekOffset);return Array.from({length:7},(_,i)=>{const d=new Date(m);d.setDate(d.getDate()+i);return d;});}
+function weekKey(){return getMonday(weekOffset).toISOString().slice(0,10);}
+function fmt(d){return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});}
+function defaultAtt(){return{status:'full',leaveTime:'19:00',halfPay:'',customPay:'',extraOT:'',advance:''};}
+
+function ensureDay(wk,di){
+  if(!data[wk])data[wk]={};
+  if(!data[wk][di]){const att={};workers.forEach(w=>{att[w.id]=defaultAtt();});data[wk][di]={attendance:att,jobs:[]};}
+  workers.forEach(w=>{if(!data[wk][di].attendance[w.id])data[wk][di].attendance[w.id]=defaultAtt();});
+  return data[wk][di];
+}
+
+function calcWorkerDay(wId,wk,di){
+  const day=ensureDay(wk,di);
+  const att=day.attendance[wId]||defaultAtt();
+  let base=0,ot=0;
+  if(att.status==='full'){
+    const[h,m]=(att.leaveTime||'19:00').split(':').map(Number);
+    const lm=h*60+m;
+    base=lm>=7*60?RATE_FULL:0;
+    ot=Math.round(RATE_OT*Math.max(0,Math.min(lm,19*60)-17*60)/120);
+  } else if(att.status==='half'){
+    base=parseFloat(att.halfPay)||0;
+  } else if(att.status==='custom'){
+    base=parseFloat(att.customPay)||0;
+  }
+  const extraOT=parseFloat(att.extraOT)||0;
+  const advance=parseFloat(att.advance)||0;
+  const offsite=day.jobs.reduce((s,j)=>{
+    const allWIds=[...j.workerIds,...(j.customWorkers||[]).map(c=>c.id)];
+    if(allWIds.includes(wId))return s+Math.round((parseFloat(j.amount)||0)/Math.max(1,allWIds.length));
+    return s;
+  },0);
+  const gross=base+ot+extraOT+offsite;
+  return{base,ot,extraOT,offsite,advance,gross,net:gross-advance,status:att.status};
+}
+
+function calcWorkerWeek(wId){
+  const wk=weekKey();
+  return Array.from({length:7},(_,i)=>calcWorkerDay(wId,wk,i)).reduce((s,p)=>({
+    base:s.base+p.base,ot:s.ot+p.ot,extraOT:s.extraOT+p.extraOT,offsite:s.offsite+p.offsite,
+    advance:s.advance+p.advance,gross:s.gross+p.gross,net:s.net+p.net
+  }),{base:0,ot:0,extraOT:0,offsite:0,advance:0,gross:0,net:0});
+}
+
+const AVC=[['#ddeeff','#1a3a6b'],['#ddf5ea','#0f4d30'],['#fdf0e0','#7a4f00'],['#fde8f0','#6b1a3a'],['#eaf5d8','#2d5a0f'],['#fde8e0','#6b2a1a'],['#f0efeb','#4a4a45'],['#fde8e8','#6b1a1a'],['#c8f0e0','#054030'],['#fde8c0','#5a3500'],['#fdd8c0','#5a2500'],['#d8f0b0','#2a5000'],['#c8e0f8','#0a2a50'],['#f0c8e0','#501a38'],['#e0dfd8','#3a3a35']];
+function avS(i){const[bg,fg]=AVC[i%AVC.length];return`background:${bg};color:${fg};`;}
+function ini(n){if(!n||!n.trim())return'?';return n.trim().split(' ').map(w=>w[0].toUpperCase()).slice(0,2).join('');}
+
+function addWorkerGlobal(){
+  if(workers.length>=MAX_W)return;
+  const id=nextWId++;workers.push({id,name:''});
+  Object.keys(data).forEach(wk=>Object.keys(data[wk]).forEach(di=>{if(!data[wk][di].attendance[id])data[wk][di].attendance[id]=defaultAtt();}));
+  render();
+}
+function deleteWorker(id){workers=workers.filter(w=>w.id!==id);render();}
+
+function render(){
+  updateWeekLabel();
+  if(currentTab==='daily')renderDaily();
+  else if(currentTab==='weekly')renderWeekly();
+  else renderRoster();
+}
+function updateWeekLabel(){
+  const d=weekDates();
+  document.getElementById('weekLabel').textContent=`${fmt(d[0])} – ${fmt(d[6])}`;
+}
+
+function renderDaily(){
+  const wk=weekKey(),dates=weekDates();
+  let html=`<div class="sched-bar">`+SCHED.map(s=>`<div class="seg ${s.t==='w'?'sw':s.t==='b'?'sb':'so'}" style="width:${(s.m/TOTAL_MINS*100).toFixed(1)}%;padding:0 2px;">${s.l}</div>`).join('')+`</div>`;
+  html+=`<div class="day-grid">`;
+  dates.forEach((d,i)=>{
+    const dt=workers.reduce((s,w)=>s+calcWorkerDay(w.id,wk,i).net,0);
+    html+=`<div class="day-col${i===selDayIdx?' sel':''}" data-di="${i}"><div class="day-name">${DAYS[i]}</div><div class="day-date">${fmt(d)}</div><div class="day-total">${dt>0?'&#8377;'+dt.toLocaleString():'—'}</div></div>`;
+  });
+  html+=`</div>`;
+
+  const di=selDayIdx,dd=ensureDay(wk,di);
+
+  html+=`<div class="panel"><div class="phdr"><div class="ptitle">Offsite Jobs <span style="font-size:12px;font-weight:400;color:var(--text-muted)">— ${DAYS[di]}, ${fmt(dates[di])}</span></div></div>`;
+  if(dd.jobs.length===0)html+=`<div class="hint">No offsite jobs yet. Click below to add one.</div>`;
+  dd.jobs.forEach(j=>{
+    const allWIds=[...j.workerIds,...(j.customWorkers||[]).map(c=>c.id)];
+    const per=allWIds.length>0?Math.round((parseFloat(j.amount)||0)/allWIds.length):0;
+    const cw=j.customWorkers||[];
+    html+=`<div class="job-entry">
+      <div class="ji-top">
+        <input type="text" placeholder="Job description" value="${(j.name||'').replace(/"/g,'&quot;')}" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-key="name" style="flex:2;min-width:130px;">
+        <input type="number" min="0" placeholder="Total &#8377;" value="${j.amount||''}" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-key="amount" class="ji-amt">
+        <div class="ji-per">${allWIds.length>0?`&#8377;${per.toLocaleString()} each &middot; ${allWIds.length} worker${allWIds.length>1?'s':''}`:''}</div>
+        <button class="rmbtn" data-action="rmjob" data-wk="${wk}" data-di="${di}" data-jid="${j.id}">×</button>
+      </div>
+      <div class="wtags-row"><span class="wtags-lbl">Roster workers <small>(tap to select)</small></span></div>
+      <div class="wtags" style="margin-bottom:10px;">
+        ${workers.length===0?`<span style="font-size:12px;color:var(--text-faint)">Add workers in roster tab first</span>`:''}
+        ${workers.map(w=>`<div class="wtag${j.workerIds.includes(w.id)?' on':''}" data-action="togglew" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-wid="${w.id}">${w.name||'(unnamed)'}</div>`).join('')}
+      </div>
+      <div class="wtags-row">
+        <span class="wtags-lbl">Extra workers <small>(${cw.length} added &middot; ${allWIds.length}/${MAX_W} total)</small></span>
+        <button class="wtags-add" data-action="addcustom" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" ${allWIds.length>=MAX_W?'disabled':''}>+ Add worker</button>
+      </div>
+      <div class="wtags">
+        ${cw.map(c=>`<div class="wtag on" style="padding:4px 6px 4px 10px;"><input class="wtag-name-input" type="text" placeholder="Name" value="${(c.name||'').replace(/"/g,'&quot;')}" data-action="renamecustom" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-cid="${c.id}"><button class="wtag-rm" data-action="rmcustom" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-cid="${c.id}">×</button></div>`).join('')}
+        ${cw.length===0?`<span style="font-size:12px;color:var(--text-faint)">None yet</span>`:''}
+      </div>
+    </div>`;
+  });
+  html+=`<button class="addjob-btn" data-action="addjob" data-wk="${wk}" data-di="${di}">+ Add Offsite Job</button></div>`;
+
+  const canAdd=workers.length<MAX_W;
+  html+=`<div class="panel"><div class="phdr">
+    <div><span class="ptitle">Workers</span><span style="font-size:12px;font-weight:400;color:var(--text-muted);margin-left:6px">— ${DAYS[di]}, ${fmt(dates[di])}</span><span class="wcount">${workers.length}/${MAX_W}</span></div>
+    <button class="abtn primary" data-action="addworker" ${canAdd?'':'disabled'}>+ Add Worker</button>
+  </div>`;
+  if(workers.length===0)html+=`<div class="hint">No workers yet. Click "+ Add Worker" above.</div>`;
+  workers.forEach((w,idx)=>{
+    const att=dd.attendance[w.id]||defaultAtt();
+    const pay=calcWorkerDay(w.id,wk,di);
+    const s=att.status;
+    const parts=[];
+    if(pay.base)parts.push(`Day &#8377;${pay.base}`);
+    if(pay.ot)parts.push(`OT &#8377;${pay.ot}`);
+    if(pay.extraOT)parts.push(`+OT &#8377;${pay.extraOT}`);
+    if(pay.offsite)parts.push(`Offsite &#8377;${pay.offsite}`);
+    let extraFields = '';
+    if(s !== 'absent'){
+      let timeField = '';
+      if(s==='full') timeField = '<div class="wfield"><label>Leave Time</label><input type="time" value="'+( att.leaveTime||'19:00')+'" data-action="updatt" data-wk="'+wk+'" data-di="'+di+'" data-wid="'+w.id+'" data-key="leaveTime"></div>';
+      if(s==='half') timeField = '<div class="wfield"><label>Half Day Pay &#8377;</label><input type="number" min="0" placeholder="e.g. 300" value="'+(att.halfPay||'')+'" data-action="updatt" data-wk="'+wk+'" data-di="'+di+'" data-wid="'+w.id+'" data-key="halfPay"></div>';
+      if(s==='custom') timeField = '<div class="wfield"><label>Custom Pay &#8377;</label><input type="number" min="0" placeholder="e.g. 100" value="'+(att.customPay||'')+'" data-action="updatt" data-wk="'+wk+'" data-di="'+di+'" data-wid="'+w.id+'" data-key="customPay"></div>';
+      let advNote = pay.advance>0 ? ' <span class="adv">&#8722; Advance &#8377;'+pay.advance+'</span> = Net &#8377;'+pay.net.toLocaleString() : '';
+      extraFields = '<div class="wfields">'+timeField
+        +'<div class="wfield"><label>Extra OT &#8377;</label><input type="number" min="0" placeholder="0" value="'+(att.extraOT||'')+'" data-action="updatt" data-wk="'+wk+'" data-di="'+di+'" data-wid="'+w.id+'" data-key="extraOT"></div>'
+        +'<div class="wfield"><label>Advance &#8377;</label><input type="number" min="0" placeholder="0" value="'+(att.advance||'')+'" data-action="updatt" data-wk="'+wk+'" data-di="'+di+'" data-wid="'+w.id+'" data-key="advance"></div>'
+        +'</div>'
+        +'<div class="breakdown">'+(parts.join(' + ')||'&#8212;')+advNote+'</div>';
+    }
+    const nameDisp = w.name || '<span style="color:var(--text-faint);font-weight:400">Unnamed</span>';
+    const nameStyle = s==='absent' ? 'color:var(--text-faint);text-decoration:line-through;' : '';
+    const chipLabel = s==='full'?'Full Day':s==='half'?'Half Day':s==='custom'?'Custom':'Absent';
+    const payDisp = s==='absent' ? '<span style="color:var(--red);font-size:12px;font-weight:600;">No pay</span>' : '<span class="wpay">&#8377;'+pay.net.toLocaleString()+'</span>';
+    html += '<div class="wrow">'
+      +'<div class="wav" style="'+avS(idx)+'">'+ini(w.name)+'</div>'
+      +'<div class="wbody">'
+        +'<div class="wline1">'
+          +'<span class="wname-disp" style="'+nameStyle+'">'+nameDisp+'</span>'
+          +'<div class="att-chip '+s+'" data-action="cycleatt" data-wk="'+wk+'" data-di="'+di+'" data-wid="'+w.id+'">'+chipLabel+'</div>'
+          +payDisp
+          +'<button class="rmbtn" data-action="delworker" data-wid="'+w.id+'" title="Remove worker" style="margin-left:auto;flex-shrink:0;">×</button>'
+        +'</div>'
+        +extraFields
+      +'</div>'
+    +'</div>';
+  });
+  html+=`</div>`;
+  document.getElementById('tab-daily').innerHTML=html;
+  attachDailyEvents();
+}
+
+function attachDailyEvents(){
+  document.querySelectorAll('.day-col[data-di]').forEach(el=>el.addEventListener('click',()=>{selDayIdx=parseInt(el.dataset.di);renderDaily();}));
+  document.querySelectorAll('input[data-key=name],input.ji-amt').forEach(el=>{
+    el.addEventListener('input',()=>{
+      const d=ensureDay(el.dataset.wk,parseInt(el.dataset.di));
+      const j=d.jobs.find(x=>x.id===parseInt(el.dataset.jid));
+      if(j){
+        j[el.dataset.key]=el.value;
+        // Targeted update: refresh per-worker cost display without re-rendering
+        const entry=el.closest('.job-entry');
+        if(entry){
+          const allWIds=[...j.workerIds,...(j.customWorkers||[]).map(c=>c.id)];
+          const per=allWIds.length>0?Math.round((parseFloat(j.amount)||0)/allWIds.length):0;
+          const perEl=entry.querySelector('.ji-per');
+          if(perEl)perEl.innerHTML=allWIds.length>0?`&#8377;${per.toLocaleString()} each &middot; ${allWIds.length} worker${allWIds.length>1?'s':''}:`:'';
+        }
+      }
+    });
+    el.addEventListener('blur',()=>{ renderDaily(); });
+  });
+  document.querySelectorAll('input[data-action=updatt]').forEach(el=>{
+    if(el.type==='time'){
+      el.addEventListener('change',()=>{
+        const d=ensureDay(el.dataset.wk,parseInt(el.dataset.di));
+        const wid=parseInt(el.dataset.wid);
+        if(!d.attendance[wid])d.attendance[wid]=defaultAtt();
+        d.attendance[wid][el.dataset.key]=el.value;
+        renderDaily();
+      });
+    } else {
+      el.addEventListener('input',()=>{
+        const d=ensureDay(el.dataset.wk,parseInt(el.dataset.di));
+        const wid=parseInt(el.dataset.wid);
+        if(!d.attendance[wid])d.attendance[wid]=defaultAtt();
+        d.attendance[wid][el.dataset.key]=el.value;
+        const pay=calcWorkerDay(wid,el.dataset.wk,parseInt(el.dataset.di));
+        const row=el.closest('.wrow');
+        if(row){
+          const payEl=row.querySelector('.wpay');
+          if(payEl)payEl.textContent='\u20B9'+pay.net.toLocaleString();
+          const bd=row.querySelector('.breakdown');
+          if(bd){
+            const pts=[];
+            if(pay.base)pts.push('Day \u20B9'+pay.base);
+            if(pay.ot)pts.push('OT \u20B9'+pay.ot);
+            if(pay.extraOT)pts.push('+OT \u20B9'+pay.extraOT);
+            if(pay.offsite)pts.push('Offsite \u20B9'+pay.offsite);
+            const advNote=pay.advance>0?' <span class="adv">\u2212 Advance \u20B9'+pay.advance+'</span> = Net \u20B9'+pay.net.toLocaleString():'';
+            bd.innerHTML=(pts.join(' + ')||'\u2014')+advNote;
+          }
+        }
+      });
+      el.addEventListener('blur',()=>{ renderDaily(); });
+    }
+  });
+  document.querySelectorAll('input[data-action=renamecustom]').forEach(el=>el.addEventListener('input',()=>{
+    const d=ensureDay(el.dataset.wk,parseInt(el.dataset.di));
+    const j=d.jobs.find(x=>x.id===parseInt(el.dataset.jid));
+    if(j){const c=(j.customWorkers||[]).find(x=>x.id===parseInt(el.dataset.cid));if(c)c.name=el.value;}
+  }));
+}
+
+function renderWeekly(){
+  const wk=weekKey(),dates=weekDates();
+  const totGross=workers.reduce((s,w)=>s+calcWorkerWeek(w.id).gross,0);
+  const totNet=workers.reduce((s,w)=>s+calcWorkerWeek(w.id).net,0);
+  const totAdv=workers.reduce((s,w)=>s+calcWorkerWeek(w.id).advance,0);
+  let html=`<div class="metric-cards">
+    <div class="mc"><div class="mc-label">Workers</div><div class="mc-val">${workers.length}</div></div>
+    <div class="mc"><div class="mc-label">Gross Wages</div><div class="mc-val">&#8377;${totGross.toLocaleString()}</div></div>
+    <div class="mc"><div class="mc-label">Total Advances</div><div class="mc-val red">&#8377;${totAdv.toLocaleString()}</div></div>
+    <div class="mc"><div class="mc-label">Net Payable</div><div class="mc-val green">&#8377;${totNet.toLocaleString()}</div></div>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr>
+    <th>Worker</th>
+    ${DAYS.map((d,i)=>`<th style="text-align:center">${d}<br><span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">${fmt(dates[i])}</span></th>`).join('')}
+    <th>Gross</th><th style="color:var(--red)">Advance</th><th style="text-align:right">Net Payable</th>
+  </tr></thead><tbody>`;
+  workers.forEach(w=>{
+    const week=calcWorkerWeek(w.id);
+    html+=`<tr><td style="font-weight:600">${w.name||'(unnamed)'}</td>
+      ${Array.from({length:7},(_,i)=>{
+        const p=calcWorkerDay(w.id,wk,i);
+        if(p.status==='absent')return`<td style="text-align:center"><span class="dot da" title="Absent"></span></td>`;
+        const dc=p.status==='custom'?'dcu':p.status==='half'?'dh':p.ot>0||p.extraOT>0?'do2':'dp';
+        return`<td style="text-align:center;font-size:12px"><span class="dot ${dc}"></span><br>&#8377;${p.net}</td>`;
+      }).join('')}
+      <td>&#8377;${week.gross.toLocaleString()}</td>
+      <td style="color:var(--red)">${week.advance>0?'− &#8377;'+week.advance.toLocaleString():'—'}</td>
+      <td style="text-align:right;font-weight:600;color:var(--accent)">&#8377;${week.net.toLocaleString()}</td>
+    </tr>`;
+  });
+  const colNets=Array.from({length:7},(_,i)=>workers.reduce((s,w)=>s+calcWorkerDay(w.id,wk,i).net,0));
+  html+=`<tr class="total-row"><td>Total</td>
+    ${colNets.map(t=>`<td style="text-align:center;font-size:12px">${t>0?'&#8377;'+t.toLocaleString():'—'}</td>`).join('')}
+    <td>&#8377;${totGross.toLocaleString()}</td>
+    <td style="color:var(--red)">${totAdv>0?'− &#8377;'+totAdv.toLocaleString():'—'}</td>
+    <td style="text-align:right;color:var(--accent)">&#8377;${totNet.toLocaleString()}</td>
+  </tr></tbody></table></div>
+  <div style="margin-top:10px;font-size:11px;color:var(--text-faint)">
+    <span class="dot dp"></span> Full day &nbsp;
+    <span class="dot dh"></span> Half day &nbsp;
+    <span class="dot dcu"></span> Custom &nbsp;
+    <span class="dot do2"></span> With OT &nbsp;
+    <span class="dot da"></span> Absent
+  </div>`;
+  document.getElementById('tab-weekly').innerHTML=html;
+}
+
+function renderRoster(){
+  const canAdd=workers.length<MAX_W;
+  let html=`<div class="panel"><div class="phdr">
+    <div style="display:flex;align-items:center;gap:8px"><span class="ptitle">Workers Roster</span><span class="wcount">${workers.length}/${MAX_W}</span></div>
+    <button class="abtn primary" id="addWRoster" ${canAdd?'':'disabled'}>+ Add Worker</button>
+  </div>`;
+  if(workers.length===0)html+=`<div class="hint">No workers yet. Add them here — they appear on all days automatically.</div>`;
+  workers.forEach((w,idx)=>{
+    html+=`<div class="rrow"><div class="wav" style="${avS(idx)}">${ini(w.name)}</div>
+      <input class="rname" type="text" placeholder="Enter worker name" value="${(w.name||'').replace(/"/g,'&quot;')}" data-wid="${w.id}">
+      <button class="rmbtn" data-action="delworker" data-wid="${w.id}">×</button></div>`;
+  });
+  if(!canAdd)html+=`<div style="font-size:12px;color:var(--text-faint);margin-top:8px">Maximum of ${MAX_W} workers reached.</div>`;
+  html+=`</div>
+  <div class="help-panel"><div class="ptitle">How to use this app</div>
+  <p>
+    <b>1. Add workers</b> here in the roster — they appear on all days automatically.<br>
+    <b>2. Daily Entry tab</b> — click a day, mark each worker as Full Day / Half Day / Absent.<br>
+    <b>3. Leave time</b> — change if a worker left before 7pm (pay adjusts automatically).<br>
+    <b>4. Extra OT & Advance</b> — enter in each worker's row. Advance is deducted from pay.<br>
+    <b>5. Offsite Jobs</b> — add the job, enter total amount, tap the workers who went. Split is automatic.<br>
+    <b>6. Extra offsite workers</b> — use "+ Add worker" inside each job for workers not in the roster.<br>
+    <b>7. Weekly Summary</b> — see gross, advances, and net payable for the full week.<br>
+    <b>8. Print / Save PDF</b> — click the button at the top right to save or print.
+  </p></div>`;
+  document.getElementById('tab-roster').innerHTML=html;
+  document.getElementById('addWRoster').addEventListener('click',()=>addWorkerGlobal());
+  document.querySelectorAll('.rname').forEach(el=>el.addEventListener('input',()=>{
+    const w=workers.find(x=>x.id===parseInt(el.dataset.wid));
+    if(w){w.name=el.value;document.querySelectorAll('.rrow').forEach(r=>{const i=r.querySelector('.rname'),a=r.querySelector('.wav');if(i&&a)a.textContent=ini(i.value);});}
+  }));
+  document.getElementById('tab-roster').addEventListener('click',function(e){
+    const el=e.target.closest('[data-action=delworker]');if(el)deleteWorker(parseInt(el.dataset.wid));
+  });
+}
+
+function switchTab(name){
+  currentTab=name;
+  ['daily','weekly','roster'].forEach(t=>{
+    document.getElementById('tab-'+t+'-btn').classList.toggle('active',t===name);
+    document.getElementById('tab-'+t).style.display=t===name?'block':'none';
+  });
+  render();
+}
+document.getElementById('tab-daily-btn').addEventListener('click',()=>switchTab('daily'));
+document.getElementById('tab-weekly-btn').addEventListener('click',()=>switchTab('weekly'));
+document.getElementById('tab-roster-btn').addEventListener('click',()=>switchTab('roster'));
+document.getElementById('prevWeek').addEventListener('click',()=>{weekOffset--;render();});
+document.getElementById('nextWeek').addEventListener('click',()=>{weekOffset++;render();});
+
+// One-time click delegation for daily tab actions (NOT inside attachDailyEvents to avoid stacking listeners)
+document.getElementById('tab-daily').addEventListener('click',function(e){
+  const el=e.target.closest('[data-action]');if(!el)return;
+  const a=el.dataset.action,wk=el.dataset.wk,di=parseInt(el.dataset.di);
+  if(a==='addjob'){ensureDay(wk,di).jobs.push({id:nextJId++,name:'',amount:'',workerIds:[],customWorkers:[]});renderDaily();}
+  else if(a==='rmjob'){const d=ensureDay(wk,di);d.jobs=d.jobs.filter(j=>j.id!==parseInt(el.dataset.jid));renderDaily();}
+  else if(a==='togglew'){
+    const d=ensureDay(wk,di);const j=d.jobs.find(x=>x.id===parseInt(el.dataset.jid));const wid=parseInt(el.dataset.wid);
+    if(j){j.workerIds=j.workerIds.includes(wid)?j.workerIds.filter(x=>x!==wid):[...j.workerIds,wid];renderDaily();}
+  } else if(a==='addcustom'){
+    const d=ensureDay(wk,di);const j=d.jobs.find(x=>x.id===parseInt(el.dataset.jid));
+    if(j){if(!j.customWorkers)j.customWorkers=[];const all=[...j.workerIds,...j.customWorkers.map(c=>c.id)].length;if(all<MAX_W){j.customWorkers.push({id:nextCId++,name:''});renderDaily();}}
+  } else if(a==='rmcustom'){
+    const d=ensureDay(wk,di);const j=d.jobs.find(x=>x.id===parseInt(el.dataset.jid));
+    if(j){j.customWorkers=(j.customWorkers||[]).filter(c=>c.id!==parseInt(el.dataset.cid));renderDaily();}
+  } else if(a==='cycleatt'){
+    const d=ensureDay(wk,di);const wid=parseInt(el.dataset.wid);
+    const cur=d.attendance[wid]||defaultAtt();
+    cur.status=cur.status==='full'?'half':cur.status==='half'?'custom':cur.status==='custom'?'absent':'full';renderDaily();
+  } else if(a==='delworker'){deleteWorker(parseInt(el.dataset.wid));}
+  else if(a==='addworker'){addWorkerGlobal();}
+});
+
+// ===== DATA PERSISTENCE =====
+const STORAGE_KEY='factoryWageCalc';
+let cloudUrl=localStorage.getItem('factoryWageCalc_url')||'https://script.google.com/macros/s/AKfycbyVRWapty26umSP6tvHxSWLHr2YinW60Q2ke9zHpWD_rwQWI5YS4aZKNki12ISCuQnzNQ/exec';
+let saveTimer=null;
+let isSaving=false;
+
+function getState(){
+  return JSON.stringify({workers,data,nextWId,nextJId,nextCId});
+}
+
+function loadState(json){
+  try{
+    const s=JSON.parse(json);
+    if(s.workers)workers=s.workers;
+    if(s.data)data=s.data;
+    if(s.nextWId)nextWId=s.nextWId;
+    if(s.nextJId)nextJId=s.nextJId;
+    if(s.nextCId)nextCId=s.nextCId;
+    return true;
+  }catch(e){return false;}
+}
+
+function saveLocal(){
+  try{localStorage.setItem(STORAGE_KEY,getState());}catch(e){}
+}
+
+function loadLocal(){
+  try{
+    const s=localStorage.getItem(STORAGE_KEY);
+    if(s)return loadState(s);
+  }catch(e){}
+  return false;
+}
+
+function setSyncStatus(state,msg){
+  const el=document.getElementById('syncStatus');
+  el.className='sync-status '+state;
+  el.textContent=msg;
+}
+
+function saveToCloud(){
+  if(!cloudUrl){saveLocal();return;}
+  saveLocal();
+  if(isSaving)return;
+  isSaving=true;
+  setSyncStatus('saving','Saving...');
+  fetch(cloudUrl,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:getState(),
+    mode:'no-cors'
+  }).then(()=>{
+    setSyncStatus('saved','\u2713 Saved');
+    isSaving=false;
+  }).catch(e=>{
+    setSyncStatus('error','\u26A0 Save error');
+    isSaving=false;
+  });
+}
+
+function loadFromCloud(cb){
+  if(!cloudUrl){
+    loadLocal();
+    if(cb)cb();
+    return;
+  }
+  setSyncStatus('saving','Loading...');
+  fetch(cloudUrl)
+    .then(r=>r.json())
+    .then(d=>{
+      if(d&&d.workers){
+        loadState(JSON.stringify(d));
+        saveLocal();
+        setSyncStatus('saved','\u2713 Synced');
+      } else {
+        loadLocal();
+        setSyncStatus('saved','\u2713 Connected');
+      }
+      if(cb)cb();
+    })
+    .catch(e=>{
+      loadLocal();
+      setSyncStatus('error','\u26A0 Load error');
+      if(cb)cb();
+    });
+}
+
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(saveToCloud,1000);
+}
+
+// Hook save into render
+const _origRender=render;
+render=function(){
+  _origRender();
+  scheduleSave();
+};
+
+// ===== SETUP UI =====
+function showSetup(){document.getElementById('setupOverlay').style.display='flex';document.getElementById('scriptUrl').value=cloudUrl;}
+function hideSetup(){document.getElementById('setupOverlay').style.display='none';}
+
+document.getElementById('settingsBtn').addEventListener('click',showSetup);
+document.getElementById('setupSkip').addEventListener('click',()=>{
+  hideSetup();
+  setSyncStatus('offline','Local only');
+});
+document.getElementById('setupSave').addEventListener('click',()=>{
+  const url=document.getElementById('scriptUrl').value.trim();
+  if(!url){alert('Please paste the Web app URL');return;}
+  cloudUrl=url;
+  localStorage.setItem('factoryWageCalc_url',url);
+  hideSetup();
+  loadFromCloud(()=>{render();});
+});
+
+// ===== INIT =====
+if(cloudUrl){
+  loadFromCloud(()=>{updateWeekLabel();renderDaily();});
+} else {
+  loadLocal();
+  updateWeekLabel();
+  renderDaily();
+  if(!localStorage.getItem(STORAGE_KEY)){
+    // First ever visit — show setup prompt
+    setTimeout(showSetup,500);
+  }
+}
+</script>
+</body>
+</html>
