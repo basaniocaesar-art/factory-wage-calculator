@@ -338,8 +338,9 @@ function calcWorkerDay(wId,wk,di){
   }
   const extraOT=parseFloat(att.extraOT)||0;
   const advance=parseFloat(att.advance)||0;
+  const activeWIds=new Set(workers.map(w=>w.id));
   const offsite=day.jobs.reduce((s,j)=>{
-    const allWIds=[...j.workerIds,...(j.customWorkers||[]).map(c=>c.id)];
+    const allWIds=[...j.workerIds.filter(id=>activeWIds.has(id)),...(j.customWorkers||[]).map(c=>c.id)];
     if(allWIds.includes(wId))return s+Math.round((parseFloat(j.amount)||0)/Math.max(1,allWIds.length));
     return s;
   },0);
@@ -392,7 +393,10 @@ function renderDaily(){
 
   html+=`<div class="panel"><div class="phdr"><div class="ptitle">Offsite Jobs <span style="font-size:12px;font-weight:400;color:var(--text-muted)">— ${DAYS[di]}, ${fmt(dates[di])}</span></div></div>`;
   if(dd.jobs.length===0)html+=`<div class="hint">No offsite jobs yet. Click below to add one.</div>`;
+  const rosterIds=new Set(workers.map(w=>w.id));
   dd.jobs.forEach(j=>{
+    // Clean stale worker IDs (deleted workers)
+    j.workerIds=j.workerIds.filter(id=>rosterIds.has(id));
     // Auto-calculate amount from client config
     const calcAmt=calcJobAmount(j);
     j.amount=calcAmt;
