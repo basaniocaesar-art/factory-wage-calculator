@@ -153,6 +153,54 @@
   .help-panel .ptitle { color: var(--accent); margin-bottom: 10px; }
   .help-panel p { font-size: 13px; color: var(--text-muted); line-height: 2; }
   .help-panel b { color: var(--text); }
+  /* Loan tracker styles */
+  .loan-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); }
+  .loan-card.active { border-left: 4px solid var(--red); }
+  .loan-card.cleared { border-left: 4px solid var(--accent); opacity: 0.7; }
+  .loan-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .loan-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .loan-name { font-size: 15px; font-weight: 600; flex: 1; }
+  .loan-status { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .loan-status.active { background: var(--red-light); color: var(--red); }
+  .loan-status.cleared { background: var(--accent-light); color: var(--accent); }
+  .loan-status.none { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+  .loan-fields { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
+  .loan-field { display: flex; flex-direction: column; gap: 4px; }
+  .loan-field label { font-size: 10px; font-weight: 600; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.04em; }
+  .loan-field input { font-size: 13px; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; width: 110px; }
+  .loan-field input:focus { border-color: var(--accent-mid); }
+  .loan-progress-wrap { margin-top: 4px; }
+  .loan-progress-bar { height: 6px; border-radius: 3px; background: var(--bg); border: 1px solid var(--border); overflow: hidden; margin-bottom: 6px; }
+  .loan-progress-fill { height: 100%; border-radius: 3px; background: var(--red); transition: width 0.3s; }
+  .loan-progress-fill.done { background: var(--accent); }
+  .loan-stats { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); }
+  .loan-stats b { color: var(--text); }
+  .loan-clear-btn { font-size: 12px; padding: 5px 12px; cursor: pointer; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--red); font-family: 'DM Sans', sans-serif; font-weight: 500; margin-left: auto; }
+  .loan-clear-btn:hover { background: var(--red-light); }
+  .loan-summary { background: var(--bg); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; }
+  .loan-summary-item { display: flex; flex-direction: column; gap: 2px; }
+  .loan-summary-item .lsi-label { font-size: 10px; font-weight: 600; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.04em; }
+  .loan-summary-item .lsi-val { font-size: 18px; font-weight: 600; }
+
+  .pin-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .pin-box { background: white; border-radius: var(--radius); padding: 28px 24px; max-width: 320px; width: 100%; box-shadow: 0 8px 30px rgba(0,0,0,0.25); text-align: center; }
+  .pin-box h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .pin-box p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+  .pin-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
+  .pin-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border-strong); background: white; transition: background 0.15s; }
+  .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+  .pin-pad { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
+  .pin-key { padding: 14px; font-size: 18px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif; transition: all 0.1s; }
+  .pin-key:hover { background: var(--bg); }
+  .pin-key:active { transform: scale(0.95); background: var(--accent-light); }
+  .pin-key.del { font-size: 14px; color: var(--text-muted); }
+  .pin-error { color: var(--red); font-size: 13px; margin-bottom: 10px; min-height: 20px; }
+  .pin-cancel { font-size: 13px; color: var(--text-muted); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; text-decoration: underline; }
+  .pin-setup-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 12px; color: var(--text-faint); }
+  .pin-change-link { cursor: pointer; color: var(--accent); text-decoration: underline; font-size: 12px; background: none; border: none; font-family: 'DM Sans', sans-serif; }
+  .loans-locked { text-align: center; padding: 40px 20px; }
+  .loans-locked .lock-icon { font-size: 48px; margin-bottom: 16px; }
+  .loans-locked p { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
   @media print {
     .header-left p, .week-nav, .tabs, .sched-bar, .day-grid, .abtn, .addjob-btn, .rmbtn, .wtags-add, .att-chip, .print-btn, .wfields, .job-entry .wtags-row:last-child, .job-entry .wtags:last-child, #tab-daily .panel:last-child { display: none !important; }
     body { background: white; }
@@ -186,59 +234,67 @@
     </div>
     <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
     <span class="sync-status offline" id="syncStatus">Local only</span>
+    <button class="wbtn" id="syncNowBtn" title="Sync now" style="font-size:14px;">&#8635;</button>
     <button class="settings-btn" id="settingsBtn" title="Cloud sync settings">&#9881;</button>
   </div>
 </div>
 
 <div class="setup-overlay" id="setupOverlay" style="display:none">
   <div class="setup-box">
-    <h2>Cloud Sync Setup</h2>
-    <p>Connect to Google Sheets so your data saves automatically and works from any device.</p>
-    <div class="setup-steps">
-      <b>1.</b> Open <a href="https://sheets.google.com" target="_blank">Google Sheets</a> &rarr; create a blank sheet<br>
-      <b>2.</b> Go to <b>Extensions &rarr; Apps Script</b><br>
-      <b>3.</b> Delete any code, paste the script shown below, then <b>Save</b><br>
-      <b>4.</b> Click <b>Deploy &rarr; New deployment</b><br>
-      <b>5.</b> Type = <b>Web app</b>, Access = <b>Anyone</b>, click <b>Deploy</b><br>
-      <b>6.</b> Copy the <b>Web app URL</b> and paste below
-    </div>
-    <details style="margin-bottom:14px;">
-      <summary style="font-size:12px;cursor:pointer;color:var(--accent);font-weight:600;">Show Apps Script code to copy</summary>
-      <pre style="font-size:11px;background:var(--bg);padding:10px;border-radius:var(--radius-sm);margin-top:8px;overflow-x:auto;white-space:pre-wrap;font-family:'DM Mono',monospace;border:1px solid var(--border);">function doGet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName('Data') || ss.insertSheet('Data');
-  var val = sheet.getRange('A1').getValue();
-  return ContentService
-    .createTextOutput(val || '{}')
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName('Data') || ss.insertSheet('Data');
-  sheet.getRange('A1').setValue(e.postData.contents);
-  return ContentService
-    .createTextOutput('ok')
-    .setMimeType(ContentService.MimeType.TEXT);
-}</pre>
-    </details>
-    <input type="text" id="scriptUrl" placeholder="Paste your Web app URL here...">
+    <h2>Cloud Sync</h2>
+    <p>Your data syncs automatically across all devices using a shared cloud URL. Just open this app on any device — sync happens in the background.</p>
+    <p style="font-size:12px;color:var(--text-muted);">Advanced: paste a different cloud URL below to use your own storage. Leave blank and click Save to reset to default.</p>
+    <input type="text" id="scriptUrl" placeholder="Paste a custom sync URL (optional)...">
     <div class="btn-row">
       <button id="setupSkip">Use Offline</button>
-      <button class="primary" id="setupSave">Connect</button>
+      <button class="primary" id="setupSave">Save</button>
     </div>
   </div>
 </div>
 
+<div class="pin-overlay" id="pinOverlay" style="display:none">
+  <div class="pin-box">
+    <h2 id="pinTitle">Loans — Enter PIN</h2>
+    <p id="pinSubtitle">This section is protected</p>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinKey('1')">1</button>
+      <button class="pin-key" onclick="pinKey('2')">2</button>
+      <button class="pin-key" onclick="pinKey('3')">3</button>
+      <button class="pin-key" onclick="pinKey('4')">4</button>
+      <button class="pin-key" onclick="pinKey('5')">5</button>
+      <button class="pin-key" onclick="pinKey('6')">6</button>
+      <button class="pin-key" onclick="pinKey('7')">7</button>
+      <button class="pin-key" onclick="pinKey('8')">8</button>
+      <button class="pin-key" onclick="pinKey('9')">9</button>
+      <button class="pin-key del" onclick="pinKey('clear')">Clear</button>
+      <button class="pin-key" onclick="pinKey('0')">0</button>
+      <button class="pin-key del" onclick="pinKey('del')">&#9003;</button>
+    </div>
+    <button class="pin-cancel" id="pinCancel" onclick="hidePinOverlay()">Cancel</button>
+    <div class="pin-setup-row">
+      <span id="pinSetupNote"></span>
+      <button class="pin-change-link" id="pinChangeBtn" onclick="startChangePIN()">Change PIN</button>
+    </div>
+  </div>
+</div>
 <div class="main">
   <div class="tabs">
     <button class="tab active" id="tab-daily-btn">Daily Entry</button>
     <button class="tab" id="tab-weekly-btn">Weekly Summary</button>
     <button class="tab" id="tab-roster-btn">Manage Workers</button>
+    <button class="tab" id="tab-loans-btn">Loans</button>
   </div>
   <div id="tab-daily"></div>
   <div id="tab-weekly" style="display:none"></div>
   <div id="tab-roster" style="display:none"></div>
+  <div id="tab-loans" style="display:none"></div>
 </div>
 
 <script>
@@ -265,6 +321,9 @@ function calcJobAmount(j){
   const pallets=parseInt(j.pallets)||0;
   const isJumbo=j.isJumbo||false;
   const isMix=j.isMix||false;
+
+  // Custom override always wins if filled
+  if(j.customOverride!==undefined&&j.customOverride!=='') return parseFloat(j.customOverride)||0;
 
   if(client==='other') return parseFloat(j.manualAmount)||0;
 
@@ -341,7 +400,13 @@ function calcWorkerDay(wId,wk,di){
   const activeWIds=new Set(workers.map(w=>w.id));
   const offsite=day.jobs.reduce((s,j)=>{
     const allWIds=[...j.workerIds.filter(id=>activeWIds.has(id)),...(j.customWorkers||[]).map(c=>c.id)];
-    if(allWIds.includes(wId))return s+Math.round((parseFloat(j.amount)||0)/Math.max(1,allWIds.length));
+    if(allWIds.includes(wId)){
+      const overrides=j.workerCustomAmounts||{};
+      if(overrides[wId]!==undefined&&overrides[wId]!==''){
+        return s+(parseFloat(overrides[wId])||0);
+      }
+      return s+Math.round((parseFloat(j.amount)||0)/Math.max(1,allWIds.length));
+    }
     return s;
   },0);
   const gross=base+ot+extraOT+offsite;
@@ -350,10 +415,22 @@ function calcWorkerDay(wId,wk,di){
 
 function calcWorkerWeek(wId){
   const wk=weekKey();
-  return Array.from({length:7},(_,i)=>calcWorkerDay(wId,wk,i)).reduce((s,p)=>({
+  const totals=Array.from({length:7},(_,i)=>calcWorkerDay(wId,wk,i)).reduce((s,p)=>({
     base:s.base+p.base,ot:s.ot+p.ot,extraOT:s.extraOT+p.extraOT,offsite:s.offsite+p.offsite,
     advance:s.advance+p.advance,gross:s.gross+p.gross,net:s.net+p.net
   }),{base:0,ot:0,extraOT:0,offsite:0,advance:0,gross:0,net:0});
+  const w=workers.find(x=>x.id===wId);
+  const loan=w&&w.loan;
+  let loanDeduct=0;
+  if(loan&&loan.balance>0&&loan.weeklyDeduct>0){
+    loanDeduct=Math.min(loan.weeklyDeduct,loan.balance);
+  }
+  return {
+    base:totals.base,ot:totals.ot,extraOT:totals.extraOT,offsite:totals.offsite,
+    advance:totals.advance,gross:totals.gross,
+    loanDeduct:loanDeduct,
+    net:totals.net-loanDeduct
+  };
 }
 
 const AVC=[['#ddeeff','#1a3a6b'],['#ddf5ea','#0f4d30'],['#fdf0e0','#7a4f00'],['#fde8f0','#6b1a3a'],['#eaf5d8','#2d5a0f'],['#fde8e0','#6b2a1a'],['#f0efeb','#4a4a45'],['#fde8e8','#6b1a1a'],['#c8f0e0','#054030'],['#fde8c0','#5a3500'],['#fdd8c0','#5a2500'],['#d8f0b0','#2a5000'],['#c8e0f8','#0a2a50'],['#f0c8e0','#501a38'],['#e0dfd8','#3a3a35']];
@@ -372,6 +449,7 @@ function render(){
   updateWeekLabel();
   if(currentTab==='daily')renderDaily();
   else if(currentTab==='weekly')renderWeekly();
+  else if(currentTab==='loans')renderLoans();
   else renderRoster();
 }
 function updateWeekLabel(){
@@ -431,7 +509,7 @@ function renderDaily(){
       }
     }
 
-    html+=`<div class="job-entry">
+    html+=`<div class="job-entry" data-jid="${j.id}">
       <div class="ji-top" style="margin-bottom:6px;">
         <div class="ji-field"><label>Client</label><select data-action="jobfield" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-key="client">
           ${CLIENTS.map(c=>`<option value="${c.id}"${c.id===cl?' selected':''}>${c.name}</option>`).join('')}
@@ -448,10 +526,11 @@ function renderDaily(){
         ${showJumbo?`<div class="ji-toggle${j.isJumbo?' on':''}" data-action="togglejumbo" data-wk="${wk}" data-di="${di}" data-jid="${j.id}">${j.isJumbo?'✓ ':''} Jumbo</div>`:''}
         ${showMix?`<div class="ji-toggle${j.isMix?' on':''}" data-action="togglemix" data-wk="${wk}" data-di="${di}" data-jid="${j.id}">${j.isMix?'✓ ':''}Mix Load</div>`:''}
         ${isManual?`<div class="ji-field"><label>Total ₹</label><input type="number" min="0" placeholder="0" value="${j.manualAmount||''}" data-action="jobnum" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-key="manualAmount" style="width:90px;"></div>`:''}
+        <div class="ji-field"><label>Custom Amount ₹ <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-faint)">(overrides total)</span></label><input type="number" min="0" placeholder="Leave blank = auto" value="${j.customOverride||''}" data-action="jobnum" data-wk="${wk}" data-di="${di}" data-jid="${j.id}" data-key="customOverride" style="width:120px;"></div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-        <div class="ji-calc">Total: &#8377;${calcAmt.toLocaleString()}</div>
-        ${rateDetail?`<div class="ji-calc-detail">${rateDetail}</div>`:''}
+        <div class="ji-calc">Total: &#8377;${calcAmt.toLocaleString()}${j.customOverride?'<span style="font-size:11px;font-weight:400;color:var(--amber);margin-left:6px;">(custom)</span>':''}</div>
+        ${(!j.customOverride&&rateDetail)?`<div class="ji-calc-detail">${rateDetail}</div>`:''}
         <div class="ji-per" style="margin-left:auto;">${allWIds.length>0?`&#8377;${per.toLocaleString()}/worker &middot; ${allWIds.length} worker${allWIds.length>1?'s':''}`:''}</div>
       </div>
       <div class="wtags-row"><span class="wtags-lbl">Workers <small>(tap to select)</small></span></div>
@@ -603,6 +682,76 @@ function attachDailyEvents(){
     const j=d.jobs.find(x=>x.id===parseInt(el.dataset.jid));
     if(j){const c=(j.customWorkers||[]).find(x=>x.id===parseInt(el.dataset.cid));if(c)c.name=el.value;}
   }));
+  // Build override amount fields for each job entry
+  const wk2=weekKey();
+  const di2=selDayIdx;
+  const dd2=ensureDay(wk2,di2);
+  document.querySelectorAll('.job-entry[data-jid]').forEach(function(entryEl){
+    const jid=parseInt(entryEl.dataset.jid);
+    const j=dd2.jobs.find(function(x){return x.id===jid;});
+    if(!j)return;
+    if(!j.workerCustomAmounts)j.workerCustomAmounts={};
+    const rIds=new Set(workers.map(function(w){return w.id;}));
+    const allWIds=[...j.workerIds.filter(function(id){return rIds.has(id);}), ...(j.customWorkers||[]).map(function(c){return c.id;})];
+    if(allWIds.length===0)return;
+
+    // Build the override section
+    var sec=document.createElement('div');
+    sec.style.cssText='margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);';
+
+    var lbl=document.createElement('div');
+    lbl.style.cssText='font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;';
+    lbl.innerHTML='Override individual amounts <span style="font-weight:400;text-transform:none;color:var(--text-faint)">(leave blank = auto-split)</span>';
+    sec.appendChild(lbl);
+
+    var grid=document.createElement('div');
+    grid.style.cssText='display:flex;flex-wrap:wrap;gap:10px;';
+
+    // Roster workers in this job
+    j.workerIds.filter(function(id){return rIds.has(id);}).forEach(function(wid){
+      var w=workers.find(function(x){return x.id===wid;});
+      if(!w)return;
+      var field=document.createElement('div');
+      field.style.cssText='display:flex;flex-direction:column;gap:3px;';
+      var fl=document.createElement('label');
+      fl.style.cssText='font-size:10px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em;';
+      fl.textContent=w.name||'Unnamed';
+      var fi=document.createElement('input');
+      fi.type='number';fi.min='0';fi.placeholder='Auto (₹'+(allWIds.length>0?Math.round((parseFloat(j.amount)||0)/allWIds.length):0)+')';
+      fi.style.width='100px';
+      if(j.workerCustomAmounts[wid]!==undefined)fi.value=j.workerCustomAmounts[wid];
+      fi.addEventListener('input',function(){
+        if(this.value==='')delete j.workerCustomAmounts[wid];
+        else j.workerCustomAmounts[wid]=this.value;
+        scheduleSave();
+      });
+      field.appendChild(fl);field.appendChild(fi);
+      grid.appendChild(field);
+    });
+
+    // Custom (extra) workers in this job
+    (j.customWorkers||[]).forEach(function(c){
+      var field=document.createElement('div');
+      field.style.cssText='display:flex;flex-direction:column;gap:3px;';
+      var fl=document.createElement('label');
+      fl.style.cssText='font-size:10px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em;';
+      fl.textContent=c.name||'Extra worker';
+      var fi=document.createElement('input');
+      fi.type='number';fi.min='0';fi.placeholder='Auto (₹'+(allWIds.length>0?Math.round((parseFloat(j.amount)||0)/allWIds.length):0)+')';
+      fi.style.width='100px';
+      if(j.workerCustomAmounts[c.id]!==undefined)fi.value=j.workerCustomAmounts[c.id];
+      fi.addEventListener('input',function(){
+        if(this.value==='')delete j.workerCustomAmounts[c.id];
+        else j.workerCustomAmounts[c.id]=this.value;
+        scheduleSave();
+      });
+      field.appendChild(fl);field.appendChild(fi);
+      grid.appendChild(field);
+    });
+
+    sec.appendChild(grid);
+    entryEl.appendChild(sec);
+  });
 }
 
 function renderWeekly(){
@@ -610,6 +759,7 @@ function renderWeekly(){
   const totGross=workers.reduce((s,w)=>s+calcWorkerWeek(w.id).gross,0);
   const totNet=workers.reduce((s,w)=>s+calcWorkerWeek(w.id).net,0);
   const totAdv=workers.reduce((s,w)=>s+calcWorkerWeek(w.id).advance,0);
+  const totLoan=workers.reduce((s,w)=>s+(calcWorkerWeek(w.id).loanDeduct||0),0);
   let html=`<div class="metric-cards">
     <div class="mc"><div class="mc-label">Workers</div><div class="mc-val">${workers.length}</div></div>
     <div class="mc"><div class="mc-label">Gross Wages</div><div class="mc-val">&#8377;${totGross.toLocaleString()}</div></div>
@@ -619,7 +769,7 @@ function renderWeekly(){
   <div class="tbl-wrap"><table><thead><tr>
     <th>Worker</th>
     ${DAYS.map((d,i)=>`<th style="text-align:center">${d}<br><span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">${fmt(dates[i])}</span></th>`).join('')}
-    <th>Gross</th><th style="color:var(--red)">Advance</th><th style="text-align:right">Net Payable</th>
+    <th>Gross</th><th style="color:var(--red)">Advance</th><th style="color:var(--red)">Loan</th><th style="text-align:right">Net Payable</th>
   </tr></thead><tbody>`;
   workers.forEach(w=>{
     const week=calcWorkerWeek(w.id);
@@ -632,6 +782,7 @@ function renderWeekly(){
       }).join('')}
       <td>&#8377;${week.gross.toLocaleString()}</td>
       <td style="color:var(--red)">${week.advance>0?'− &#8377;'+week.advance.toLocaleString():'—'}</td>
+      <td style="color:var(--red)">${week.loanDeduct>0?'− &#8377;'+week.loanDeduct.toLocaleString():'—'}</td>
       <td style="text-align:right;font-weight:600;color:var(--accent)">&#8377;${week.net.toLocaleString()}</td>
     </tr>`;
   });
@@ -640,6 +791,7 @@ function renderWeekly(){
     ${colNets.map(t=>`<td style="text-align:center;font-size:12px">${t>0?'&#8377;'+t.toLocaleString():'—'}</td>`).join('')}
     <td>&#8377;${totGross.toLocaleString()}</td>
     <td style="color:var(--red)">${totAdv>0?'− &#8377;'+totAdv.toLocaleString():'—'}</td>
+    <td style="color:var(--red)">${totLoan>0?'− &#8377;'+totLoan.toLocaleString():'—'}</td>
     <td style="text-align:right;color:var(--accent)">&#8377;${totNet.toLocaleString()}</td>
   </tr></tbody></table></div>
   <div style="margin-top:10px;font-size:11px;color:var(--text-faint)">
@@ -688,9 +840,285 @@ function renderRoster(){
   });
 }
 
+// ===== PIN PROTECTION =====
+const DEFAULT_PIN = '1234';
+const PIN_KEY = 'factoryWageCalc_pin';
+let pinUnlocked = false;
+let pinBuffer = '';
+let pinMode = 'verify'; // 'verify' | 'set-new' | 'confirm-new'
+let pinNewTemp = '';
+let pinCallback = null;
+
+function getStoredPin(){
+  return localStorage.getItem(PIN_KEY) || DEFAULT_PIN;
+}
+
+function showPinOverlay(onSuccess){
+  pinCallback = onSuccess;
+  pinBuffer = '';
+  pinMode = 'verify';
+  pinNewTemp = '';
+  document.getElementById('pinTitle').textContent = 'Loans — Enter PIN';
+  document.getElementById('pinSubtitle').textContent = 'Enter your 4-digit PIN to continue';
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('pinCancel').style.display = '';
+  document.getElementById('pinChangeBtn').style.display = '';
+  document.getElementById('pinSetupNote').textContent = getStoredPin()===DEFAULT_PIN ? 'Default PIN is 1234' : '';
+  updatePinDots();
+  document.getElementById('pinOverlay').style.display = 'flex';
+}
+
+function hidePinOverlay(){
+  document.getElementById('pinOverlay').style.display = 'none';
+  pinBuffer = '';
+  pinCallback = null;
+  // Go back to daily tab if loans was the target
+  if(currentTab==='loans'){ switchTab('daily'); }
+}
+
+function startChangePIN(){
+  pinBuffer = '';
+  pinMode = 'set-new';
+  pinNewTemp = '';
+  document.getElementById('pinTitle').textContent = 'Set new PIN';
+  document.getElementById('pinSubtitle').textContent = 'Enter a new 4-digit PIN';
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('pinCancel').style.display = '';
+  document.getElementById('pinChangeBtn').style.display = 'none';
+  updatePinDots();
+  document.getElementById('pinOverlay').style.display = 'flex';
+}
+
+function updatePinDots(){
+  for(var i=0;i<4;i++){
+    var dot = document.getElementById('pd'+i);
+    if(dot) dot.classList.toggle('filled', i < pinBuffer.length);
+  }
+}
+
+function pinKey(k){
+  if(k==='clear'){ pinBuffer=''; }
+  else if(k==='del'){ pinBuffer=pinBuffer.slice(0,-1); }
+  else if(pinBuffer.length<4){ pinBuffer+=k; }
+  updatePinDots();
+  document.getElementById('pinError').textContent = '';
+
+  if(pinBuffer.length===4){
+    setTimeout(function(){
+      if(pinMode==='verify'){
+        if(pinBuffer===getStoredPin()){
+          pinUnlocked=true;
+          document.getElementById('pinOverlay').style.display='none';
+          if(pinCallback){ pinCallback(); pinCallback=null; }
+        } else {
+          document.getElementById('pinError').textContent='Incorrect PIN. Try again.';
+          pinBuffer='';
+          updatePinDots();
+        }
+      } else if(pinMode==='set-new'){
+        pinNewTemp=pinBuffer;
+        pinBuffer='';
+        pinMode='confirm-new';
+        document.getElementById('pinTitle').textContent='Confirm new PIN';
+        document.getElementById('pinSubtitle').textContent='Enter the PIN again to confirm';
+        document.getElementById('pinError').textContent='';
+        updatePinDots();
+      } else if(pinMode==='confirm-new'){
+        if(pinBuffer===pinNewTemp){
+          localStorage.setItem(PIN_KEY, pinBuffer);
+          document.getElementById('pinOverlay').style.display='none';
+          pinBuffer='';
+          pinUnlocked=true;
+          if(pinCallback){ pinCallback(); pinCallback=null; }
+          else { renderLoans(); }
+        } else {
+          document.getElementById('pinError').textContent='PINs do not match. Try again.';
+          pinBuffer='';
+          pinMode='set-new';
+          pinNewTemp='';
+          document.getElementById('pinTitle').textContent='Set new PIN';
+          document.getElementById('pinSubtitle').textContent='Enter a new 4-digit PIN';
+          updatePinDots();
+        }
+      }
+    }, 120);
+  }
+}
+
+
+function renderLoans(){
+  const el=document.getElementById('tab-loans');
+  el.innerHTML='';
+
+  // Top bar — unlock button or change PIN button
+  var topRow=document.createElement('div');
+  topRow.style.cssText='display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:10px;';
+  if(!pinUnlocked){
+    var lockNote=document.createElement('span');
+    lockNote.style.cssText='font-size:12px;color:var(--text-muted);';
+    lockNote.innerHTML='&#128274; View only &mdash; ';
+    var unlockBtn=document.createElement('button');
+    unlockBtn.className='abtn primary';
+    unlockBtn.style.fontSize='12px';
+    unlockBtn.textContent='Unlock to edit';
+    unlockBtn.addEventListener('click',function(){ showPinOverlay(function(){ renderLoans(); }); });
+    topRow.appendChild(lockNote);
+    topRow.appendChild(unlockBtn);
+  } else {
+    var lockNote2=document.createElement('span');
+    lockNote2.style.cssText='font-size:12px;color:var(--accent);font-weight:500;';
+    lockNote2.innerHTML='&#128275; Editing unlocked';
+    var chgBtn=document.createElement('button');
+    chgBtn.className='abtn';chgBtn.style.fontSize='12px';
+    chgBtn.textContent='Change PIN';
+    chgBtn.addEventListener('click',function(){ pinUnlocked=false; startChangePIN(); });
+    var lockBtn=document.createElement('button');
+    lockBtn.className='abtn';lockBtn.style.cssText='font-size:12px;color:var(--red);';
+    lockBtn.textContent='&#128274; Lock';
+    lockBtn.addEventListener('click',function(){ pinUnlocked=false; renderLoans(); });
+    topRow.appendChild(lockNote2);
+    topRow.appendChild(chgBtn);
+    topRow.appendChild(lockBtn);
+  }
+  el.appendChild(topRow);
+
+  // Summary bar
+  const totalOutstanding=workers.reduce(function(s,w){
+    return s+(w.loan&&w.loan.balance>0?w.loan.balance:0);
+  },0);
+  const totalBorrowed=workers.reduce(function(s,w){
+    return s+(w.loan&&w.loan.original>0?w.loan.original:0);
+  },0);
+  const activeCount=workers.filter(function(w){return w.loan&&w.loan.balance>0;}).length;
+
+  var sumDiv=document.createElement('div');
+  sumDiv.className='loan-summary';
+  sumDiv.innerHTML='<div class="loan-summary-item"><div class="lsi-label">Workers with loans</div><div class="lsi-val">'+activeCount+'</div></div>'
+    +'<div class="loan-summary-item"><div class="lsi-label">Total borrowed</div><div class="lsi-val">₹'+totalBorrowed.toLocaleString()+'</div></div>'
+    +'<div class="loan-summary-item"><div class="lsi-label">Total outstanding</div><div class="lsi-val" style="color:var(--red)">₹'+totalOutstanding.toLocaleString()+'</div></div>'
+    +'<div class="loan-summary-item"><div class="lsi-label">Total repaid</div><div class="lsi-val" style="color:var(--accent)">₹'+(totalBorrowed-totalOutstanding).toLocaleString()+'</div></div>';
+  el.appendChild(sumDiv);
+
+  if(workers.length===0){
+    var h=document.createElement('div');
+    h.className='hint';h.textContent='No workers yet. Add workers in the Manage Workers tab first.';
+    el.appendChild(h);
+    return;
+  }
+
+  workers.forEach(function(w,idx){
+    if(!w.loan)w.loan={original:0,balance:0,weeklyDeduct:0};
+    var loan=w.loan;
+    var hasLoan=loan.original>0;
+    var isCleared=hasLoan&&loan.balance<=0;
+    var isActive=hasLoan&&loan.balance>0;
+
+    var card=document.createElement('div');
+    card.className='loan-card '+(isActive?'active':isCleared?'cleared':'');
+
+    // Header
+    var hdr=document.createElement('div');
+    hdr.className='loan-header';
+    var av=document.createElement('div');
+    av.className='loan-avatar';av.style.cssText=avS(idx);av.textContent=ini(w.name);
+    var nm=document.createElement('div');
+    nm.className='loan-name';nm.textContent=w.name||'Unnamed';
+    var st=document.createElement('div');
+    st.className='loan-status '+(isActive?'active':isCleared?'cleared':'none');
+    st.textContent=isActive?'Active loan':isCleared?'✓ Cleared':'No loan';
+    hdr.appendChild(av);hdr.appendChild(nm);hdr.appendChild(st);
+    card.appendChild(hdr);
+
+    // Input fields
+    var fields=document.createElement('div');
+    fields.className='loan-fields';
+
+    function makeField(labelTxt, val, placeholder, onInput, extraStyle){
+      var f=document.createElement('div');f.className='loan-field';
+      var l=document.createElement('label');l.textContent=labelTxt;
+      var i=document.createElement('input');i.type='number';i.min='0';
+      i.placeholder=placeholder;if(val)i.value=val;
+      if(extraStyle)i.style.cssText=extraStyle;
+      if(!pinUnlocked){
+        i.disabled=true;
+        i.style.opacity='0.6';i.style.cursor='not-allowed';
+      } else {
+        i.addEventListener('input',function(){onInput(this.value);});
+        i.addEventListener('blur',function(){render();scheduleSave();});
+      }
+      f.appendChild(l);f.appendChild(i);
+      return f;
+    }
+
+    fields.appendChild(makeField('Total borrowed ₹', loan.original||'', 'e.g. 10000', function(v){
+      loan.original=parseFloat(v)||0;
+      // If balance not set yet, set it to original
+      if(!isActive&&!isCleared) loan.balance=loan.original;
+    }));
+
+    fields.appendChild(makeField('Outstanding balance ₹', loan.balance||'', '0', function(v){
+      loan.balance=parseFloat(v)||0;
+    }));
+
+    fields.appendChild(makeField('Weekly deduction ₹', loan.weeklyDeduct||'', 'e.g. 500', function(v){
+      loan.weeklyDeduct=parseFloat(v)||0;
+    }));
+
+    card.appendChild(fields);
+
+    // Progress and stats
+    if(hasLoan){
+      var prog=document.createElement('div');prog.className='loan-progress-wrap';
+
+      var pct=loan.original>0?Math.max(0,Math.min(100,((loan.original-loan.balance)/loan.original)*100)):0;
+      var bar=document.createElement('div');bar.className='loan-progress-bar';
+      var fill=document.createElement('div');
+      fill.className='loan-progress-fill'+(isCleared?' done':'');
+      fill.style.width=pct.toFixed(1)+'%';
+      bar.appendChild(fill);prog.appendChild(bar);
+
+      var weeksLeft=loan.weeklyDeduct>0&&loan.balance>0?Math.ceil(loan.balance/loan.weeklyDeduct):0;
+      var stats=document.createElement('div');stats.className='loan-stats';
+      stats.innerHTML='<span>Repaid: <b>₹'+(loan.original-loan.balance).toLocaleString()+'</b></span>'
+        +'<span>Remaining: <b style="color:var(--red)">₹'+Math.max(0,loan.balance).toLocaleString()+'</b></span>'
+        +(weeksLeft>0?'<span>Clears in: <b>'+weeksLeft+' week'+(weeksLeft>1?'s':'')+'</b></span>':'')
+        +(isCleared?'<span style="color:var(--accent);font-weight:600">✓ Fully repaid</span>':'');
+      prog.appendChild(stats);
+      card.appendChild(prog);
+
+      // Record this week's deduction button
+      if(isActive&&loan.weeklyDeduct>0){
+        var deductRow=document.createElement('div');
+        deductRow.style.cssText='margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;';
+        var deductNote=document.createElement('div');
+        deductNote.style.cssText='font-size:12px;color:var(--text-muted);flex:1;';
+        var thisWeekDeduct=Math.min(loan.weeklyDeduct,loan.balance);
+        deductNote.innerHTML='This week deduction: <b>₹'+thisWeekDeduct.toLocaleString()+'</b> (auto-deducted from weekly wages)';
+        if(pinUnlocked){
+          var applyBtn=document.createElement('button');
+          applyBtn.className='loan-clear-btn';
+          applyBtn.style.cssText='color:var(--accent);';
+          applyBtn.textContent='Record this week';
+          applyBtn.addEventListener('click',function(){
+            loan.balance=Math.max(0,loan.balance-thisWeekDeduct);
+            scheduleSave();render();
+          });
+          deductRow.appendChild(applyBtn);
+        }
+        deductRow.appendChild(deductNote);
+        card.appendChild(deductRow);
+      }
+    }
+
+    el.appendChild(card);
+  });
+}
+
 function switchTab(name){
+  // Lock loans edits when navigating away
+  if(currentTab==='loans' && name!=='loans'){ pinUnlocked=false; }
   currentTab=name;
-  ['daily','weekly','roster'].forEach(t=>{
+  ['daily','weekly','roster','loans'].forEach(t=>{
     document.getElementById('tab-'+t+'-btn').classList.toggle('active',t===name);
     document.getElementById('tab-'+t).style.display=t===name?'block':'none';
   });
@@ -699,6 +1127,7 @@ function switchTab(name){
 document.getElementById('tab-daily-btn').addEventListener('click',()=>switchTab('daily'));
 document.getElementById('tab-weekly-btn').addEventListener('click',()=>switchTab('weekly'));
 document.getElementById('tab-roster-btn').addEventListener('click',()=>switchTab('roster'));
+document.getElementById('tab-loans-btn').addEventListener('click',()=>switchTab('loans'));
 document.getElementById('prevWeek').addEventListener('click',()=>{weekOffset--;render();});
 document.getElementById('nextWeek').addEventListener('click',()=>{weekOffset++;render();});
 
@@ -706,7 +1135,7 @@ document.getElementById('nextWeek').addEventListener('click',()=>{weekOffset++;r
 document.getElementById('tab-daily').addEventListener('click',function(e){
   const el=e.target.closest('[data-action]');if(!el)return;
   const a=el.dataset.action,wk=el.dataset.wk,di=parseInt(el.dataset.di);
-  if(a==='addjob'){ensureDay(wk,di).jobs.push({id:nextJId++,client:'synthite',name:'',containerSize:'20',pallets:'',isJumbo:false,isMix:false,manualAmount:'',amount:'',workerIds:[],customWorkers:[]});renderDaily();}
+  if(a==='addjob'){ensureDay(wk,di).jobs.push({id:nextJId++,client:'synthite',name:'',containerSize:'20',pallets:'',isJumbo:false,isMix:false,manualAmount:'',customOverride:'',amount:'',workerIds:[],customWorkers:[],workerCustomAmounts:{}});renderDaily();}
   else if(a==='rmjob'){const d=ensureDay(wk,di);d.jobs=d.jobs.filter(j=>j.id!==parseInt(el.dataset.jid));renderDaily();}
   else if(a==='togglew'){
     const d=ensureDay(wk,di);const j=d.jobs.find(x=>x.id===parseInt(el.dataset.jid));const wid=parseInt(el.dataset.wid);
@@ -733,12 +1162,22 @@ document.getElementById('tab-daily').addEventListener('click',function(e){
 
 // ===== DATA PERSISTENCE =====
 const STORAGE_KEY='factoryWageCalc';
-let cloudUrl=localStorage.getItem('factoryWageCalc_url')||'https://script.google.com/macros/s/AKfycbyVRWapty26umSP6tvHxSWLHr2YinW60Q2ke9zHpWD_rwQWI5YS4aZKNki12ISCuQnzNQ/exec';
+const TS_KEY='factoryWageCalc_ts';
+// Cloud sync via textdb.dev (free, anonymous, full CORS support)
+const DEFAULT_CLOUD_URL='https://textdb.dev/api/data/factory-wage-calc-basanio-2026-04-18';
+let savedCloudUrl=localStorage.getItem('factoryWageCalc_url');
+// Auto-clear any old/incompatible saved URLs (Apps Script, JSONBlob)
+if(savedCloudUrl&&(savedCloudUrl.indexOf('script.google.com')>=0||savedCloudUrl.indexOf('jsonblob.com')>=0)){
+  localStorage.removeItem('factoryWageCalc_url');
+  savedCloudUrl=null;
+}
+let cloudUrl=savedCloudUrl||DEFAULT_CLOUD_URL;
 let saveTimer=null;
 let isSaving=false;
+let lastSyncTs=parseInt(localStorage.getItem(TS_KEY))||0;
 
 function getState(){
-  return JSON.stringify({workers,data,nextWId,nextJId,nextCId});
+  return JSON.stringify({workers,data,nextWId,nextJId,nextCId,_ts:Date.now()});
 }
 
 function loadState(json){
@@ -749,26 +1188,44 @@ function loadState(json){
     if(s.nextWId)nextWId=s.nextWId;
     if(s.nextJId)nextJId=s.nextJId;
     if(s.nextCId)nextCId=s.nextCId;
-    return true;
-  }catch(e){return false;}
+    return s._ts||0;
+  }catch(e){return -1;}
 }
 
 function saveLocal(){
-  try{localStorage.setItem(STORAGE_KEY,getState());}catch(e){}
+  try{
+    const state=getState();
+    localStorage.setItem(STORAGE_KEY,state);
+    const parsed=JSON.parse(state);
+    lastSyncTs=parsed._ts;
+    localStorage.setItem(TS_KEY,String(lastSyncTs));
+  }catch(e){}
 }
 
 function loadLocal(){
   try{
     const s=localStorage.getItem(STORAGE_KEY);
-    if(s)return loadState(s);
+    if(s){
+      const ts=loadState(s);
+      if(ts>0)lastSyncTs=ts;
+      return true;
+    }
   }catch(e){}
   return false;
 }
 
 function setSyncStatus(state,msg){
   const el=document.getElementById('syncStatus');
+  if(!el)return;
   el.className='sync-status '+state;
   el.textContent=msg;
+}
+
+function autoClearError(){
+  setTimeout(()=>{
+    const el=document.getElementById('syncStatus');
+    if(el&&el.classList.contains('error')) setSyncStatus('offline','Local only');
+  },5000);
 }
 
 function saveToCloud(){
@@ -777,50 +1234,84 @@ function saveToCloud(){
   if(isSaving)return;
   isSaving=true;
   setSyncStatus('saving','Saving...');
+  const ctrl=new AbortController();
+  const timeoutId=setTimeout(()=>ctrl.abort(),10000);
   fetch(cloudUrl,{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    headers:{'Content-Type':'text/plain'},
     body:getState(),
-    mode:'no-cors'
-  }).then(()=>{
+    redirect:'follow',
+    signal:ctrl.signal
+  }).then(r=>r.text()).then(t=>{
+    clearTimeout(timeoutId);
     setSyncStatus('saved','\u2713 Saved');
     isSaving=false;
   }).catch(e=>{
-    setSyncStatus('error','\u26A0 Save error');
+    clearTimeout(timeoutId);
+    console.error('Cloud save error:',e);
+    setSyncStatus('error',e.name==='AbortError'?'\u26A0 Save timed out':'\u26A0 Save error');
     isSaving=false;
+    autoClearError();
   });
 }
 
-function loadFromCloud(cb){
+// loadFromCloud: pulls cloud data; only applies if cloud is newer than local
+// (so failed saves don't get clobbered when the page reopens)
+function loadFromCloud(cb,opts){
+  opts=opts||{};
   if(!cloudUrl){
-    loadLocal();
     if(cb)cb();
     return;
   }
   setSyncStatus('saving','Loading...');
-  fetch(cloudUrl)
-    .then(r=>r.json())
+  const ctrl=new AbortController();
+  const timeoutId=setTimeout(()=>ctrl.abort(),10000);
+  fetch(cloudUrl,{redirect:'follow',signal:ctrl.signal})
+    .then(r=>{
+      clearTimeout(timeoutId);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const ct=r.headers.get('content-type')||'';
+      if(ct.indexOf('text/html')>=0){
+        return r.text().then(t=>{ throw new Error('NOT_JSON'); });
+      }
+      return r.json();
+    })
     .then(d=>{
       if(d&&d.workers){
-        loadState(JSON.stringify(d));
-        saveLocal();
-        setSyncStatus('saved','\u2713 Synced');
+        const cloudTs=d._ts||0;
+        // Force = manual sync, always apply cloud
+        // Otherwise: only apply cloud if cloud is newer than local
+        if(opts.force||cloudTs>=lastSyncTs){
+          loadState(JSON.stringify(d));
+          lastSyncTs=cloudTs;
+          localStorage.setItem(TS_KEY,String(lastSyncTs));
+          // Also save to localStorage cache
+          try{localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}catch(e){}
+          setSyncStatus('saved','\u2713 Synced');
+        } else {
+          // Local is newer — push it to cloud
+          setSyncStatus('saved','\u2713 Saved');
+          // Trigger a save so cloud catches up
+          setTimeout(saveToCloud,500);
+        }
       } else {
-        loadLocal();
         setSyncStatus('saved','\u2713 Connected');
       }
       if(cb)cb();
     })
     .catch(e=>{
-      loadLocal();
-      setSyncStatus('error','\u26A0 Load error');
+      clearTimeout(timeoutId);
+      console.error('Cloud load error:',e);
+      setSyncStatus('error',e.name==='AbortError'?'\u26A0 Sync timed out':'\u26A0 Load error');
+      autoClearError();
       if(cb)cb();
     });
 }
 
 function scheduleSave(){
+  saveLocal(); // always save to localStorage immediately
   clearTimeout(saveTimer);
-  saveTimer=setTimeout(saveToCloud,1000);
+  saveTimer=setTimeout(saveToCloud,1500); // then sync to cloud after 1.5s
 }
 
 // Hook save into render
@@ -841,24 +1332,51 @@ document.getElementById('setupSkip').addEventListener('click',()=>{
 });
 document.getElementById('setupSave').addEventListener('click',()=>{
   const url=document.getElementById('scriptUrl').value.trim();
-  if(!url){alert('Please paste the Web app URL');return;}
-  cloudUrl=url;
-  localStorage.setItem('factoryWageCalc_url',url);
+  if(!url){
+    cloudUrl=DEFAULT_CLOUD_URL;
+    localStorage.removeItem('factoryWageCalc_url');
+  } else {
+    cloudUrl=url;
+    localStorage.setItem('factoryWageCalc_url',url);
+  }
   hideSetup();
-  loadFromCloud(()=>{render();});
+  loadFromCloud(()=>{render();},{force:true});
+});
+
+// Sync Now button (manual force-pull from cloud)
+const syncNowBtn=document.getElementById('syncNowBtn');
+if(syncNowBtn){
+  syncNowBtn.addEventListener('click',()=>{
+    if(!cloudUrl){showSetup();return;}
+    loadFromCloud(()=>{render();},{force:true});
+  });
+}
+
+// Save when page is closing/backgrounded so we don't lose data
+window.addEventListener('beforeunload',function(){
+  saveLocal();
+  if(cloudUrl){
+    try{
+      fetch(cloudUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:getState(),keepalive:true});
+    }catch(e){}
+  }
+});
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='hidden'){
+    saveLocal();
+    saveToCloud();
+  }
 });
 
 // ===== INIT =====
+// Always render UI immediately with local data so the page never appears blank
+loadLocal();
+updateWeekLabel();
+renderDaily();
+
+// Then sync from cloud in background (timestamp-based merge prevents data loss)
 if(cloudUrl){
-  loadFromCloud(()=>{updateWeekLabel();renderDaily();});
-} else {
-  loadLocal();
-  updateWeekLabel();
-  renderDaily();
-  if(!localStorage.getItem(STORAGE_KEY)){
-    // First ever visit — show setup prompt
-    setTimeout(showSetup,500);
-  }
+  loadFromCloud(()=>{render();});
 }
 </script>
 </body>
