@@ -873,7 +873,9 @@ function showPinOverlay(onSuccess){
   document.getElementById('pinSubtitle').textContent = 'Enter the 4-digit password to edit';
   document.getElementById('pinError').textContent = '';
   document.getElementById('pinCancel').style.display = '';
-  document.getElementById('pinChangeBtn').style.display = '';
+  // No "Change PIN" on the lock screen: the password can only be changed by
+  // someone who is already unlocked (i.e. the owner who knows the current one).
+  document.getElementById('pinChangeBtn').style.display = 'none';
   document.getElementById('pinSetupNote').textContent = '';
   updatePinDots();
   document.getElementById('pinOverlay').style.display = 'flex';
@@ -1529,7 +1531,7 @@ document.addEventListener('visibilitychange',function(){
 });
 
 // ===== AUTO-UPDATE CHECK (so nobody is stuck on an old cached version) =====
-const APP_VERSION='2026-06-01c';
+const APP_VERSION='2026-06-01d';
 (function(){
   let v=document.getElementById('appVersion');
   if(!v){
