@@ -843,30 +843,38 @@ function renderRoster(){
   });
 }
 
-// ===== PIN PROTECTION =====
-const DEFAULT_PIN = '1234';
-const PIN_KEY = 'factoryWageCalc_pin';
+// ===== PIN PROTECTION (shared across all devices via cloud sync) =====
+const PIN_KEY = 'factoryWageCalc_pin'; // legacy per-device pin, used once for migration
 let pinUnlocked = false;
 let pinBuffer = '';
 let pinMode = 'verify'; // 'verify' | 'set-new' | 'confirm-new'
 let pinNewTemp = '';
 let pinCallback = null;
-
-function getStoredPin(){
-  return localStorage.getItem(PIN_KEY) || DEFAULT_PIN;
+// The real password now lives in the synced state as a hash, so it is the
+// SAME for everyone and can't be bypassed with a per-device 1234 default.
+let loanPinHash = null;
+let loanPinTs = 0;
+function hashPin(p){
+  const s='fwcLoan|'+String(p);
+  let h=5381;
+  for(let i=0;i<s.length;i++){ h=((h<<5)+h+s.charCodeAt(i))>>>0; }
+  return 'h'+h.toString(36);
 }
+function hasLoanPin(){ return !!loanPinHash; }
 
 function showPinOverlay(onSuccess){
   pinCallback = onSuccess;
+  // First time ever: no shared password set -> make the owner create one.
+  if(!hasLoanPin()){ startChangePIN(); return; }
   pinBuffer = '';
   pinMode = 'verify';
   pinNewTemp = '';
-  document.getElementById('pinTitle').textContent = 'Loans — Enter PIN';
-  document.getElementById('pinSubtitle').textContent = 'Enter your 4-digit PIN to continue';
+  document.getElementById('pinTitle').textContent = 'Loans — Enter password';
+  document.getElementById('pinSubtitle').textContent = 'Enter the 4-digit password to edit';
   document.getElementById('pinError').textContent = '';
   document.getElementById('pinCancel').style.display = '';
   document.getElementById('pinChangeBtn').style.display = '';
-  document.getElementById('pinSetupNote').textContent = getStoredPin()===DEFAULT_PIN ? 'Default PIN is 1234' : '';
+  document.getElementById('pinSetupNote').textContent = '';
   updatePinDots();
   document.getElementById('pinOverlay').style.display = 'flex';
 }
@@ -883,9 +891,10 @@ function startChangePIN(){
   pinBuffer = '';
   pinMode = 'set-new';
   pinNewTemp = '';
-  document.getElementById('pinTitle').textContent = 'Set new PIN';
-  document.getElementById('pinSubtitle').textContent = 'Enter a new 4-digit PIN';
+  document.getElementById('pinTitle').textContent = hasLoanPin() ? 'Change loan password' : 'Set loan password';
+  document.getElementById('pinSubtitle').textContent = 'Choose a 4-digit password — everyone shares this';
   document.getElementById('pinError').textContent = '';
+  document.getElementById('pinSetupNote').textContent = '';
   document.getElementById('pinCancel').style.display = '';
   document.getElementById('pinChangeBtn').style.display = 'none';
   updatePinDots();
@@ -909,12 +918,12 @@ function pinKey(k){
   if(pinBuffer.length===4){
     setTimeout(function(){
       if(pinMode==='verify'){
-        if(pinBuffer===getStoredPin()){
+        if(pinBuffer && hashPin(pinBuffer)===loanPinHash){
           pinUnlocked=true;
           document.getElementById('pinOverlay').style.display='none';
           if(pinCallback){ pinCallback(); pinCallback=null; }
         } else {
-          document.getElementById('pinError').textContent='Incorrect PIN. Try again.';
+          document.getElementById('pinError').textContent='Incorrect password. Try again.';
           pinBuffer='';
           updatePinDots();
         }
@@ -928,10 +937,14 @@ function pinKey(k){
         updatePinDots();
       } else if(pinMode==='confirm-new'){
         if(pinBuffer===pinNewTemp){
-          localStorage.setItem(PIN_KEY, pinBuffer);
+          loanPinHash=hashPin(pinBuffer);
+          loanPinTs=Date.now();
+          try{ localStorage.removeItem(PIN_KEY); }catch(e){}
           document.getElementById('pinOverlay').style.display='none';
           pinBuffer='';
           pinUnlocked=true;
+          saveLocal();
+          if(typeof syncCycle==='function') syncCycle(); // share the new password with everyone
           if(pinCallback){ pinCallback(); pinCallback=null; }
           else { renderLoans(); }
         } else {
@@ -1183,7 +1196,7 @@ let lastSyncTs=parseInt(localStorage.getItem(TS_KEY))||0;
 let delW; try{delW=JSON.parse(localStorage.getItem(DELW_KEY)||'[]');}catch(e){delW=[];}
 
 function getState(){
-  return JSON.stringify({workers,data,nextWId,nextJId,nextCId,_delW:delW,_ts:Date.now()});
+  return JSON.stringify({workers,data,nextWId,nextJId,nextCId,_delW:delW,_loanPin:loanPinHash,_loanPinTs:loanPinTs,_ts:Date.now()});
 }
 
 function applyState(s){
@@ -1193,6 +1206,12 @@ function applyState(s){
   if(s.nextJId)nextJId=s.nextJId;
   if(s.nextCId)nextCId=s.nextCId;
   if(s._delW)delW=s._delW;
+  // Adopt the shared loan password only if the incoming one is newer,
+  // so a stale save can't roll back a password change.
+  if(s._loanPinTs!==undefined && (s._loanPinTs||0) >= (loanPinTs||0)){
+    loanPinHash = s._loanPin || null;
+    loanPinTs = s._loanPinTs || 0;
+  }
 }
 
 function loadState(json){
@@ -1311,12 +1330,18 @@ function mergeStates(s1,s2){
       data2[wk][di]={attendance:att,jobs:jobs};
     });
   });
+  // Shared loan password: keep whichever side set it most recently (own timestamp)
+  const pinWin = (B._loanPinTs||0) >= (A._loanPinTs||0)
+    ? {h:B._loanPin, t:B._loanPinTs||0}
+    : {h:A._loanPin, t:A._loanPinTs||0};
   return {
     workers:workers2,data:data2,
     nextWId:Math.max(A.nextWId||1,B.nextWId||1),
     nextJId:Math.max(A.nextJId||1,B.nextJId||1),
     nextCId:Math.max(A.nextCId||1,B.nextCId||1),
     _delW:delTomb,
+    _loanPin:pinWin.h||null,
+    _loanPinTs:pinWin.t||0,
     _ts:Math.max(A._ts||0,B._ts||0)
   };
 }
@@ -1504,7 +1529,7 @@ document.addEventListener('visibilitychange',function(){
 });
 
 // ===== AUTO-UPDATE CHECK (so nobody is stuck on an old cached version) =====
-const APP_VERSION='2026-06-01b';
+const APP_VERSION='2026-06-01c';
 (function(){
   let v=document.getElementById('appVersion');
   if(!v){
@@ -1540,6 +1565,18 @@ const _hadLocal=loadLocal();
 // A brand-new device must ADOPT the shared cloud data, not inject its default
 // seed workers (Worker 1 / Worker 2) into everyone else's roster.
 if(!_hadLocal && cloudUrl){ workers=[]; data={}; nextWId=1; nextJId=1; nextCId=1; }
+// One-time migration: if this device already had its own (non-default) loan PIN,
+// promote it to the shared password so the owner keeps the one they chose.
+if(!loanPinHash){
+  try{
+    const _legacyPin=localStorage.getItem(PIN_KEY);
+    if(_legacyPin && _legacyPin!=='1234' && _legacyPin!=='set'){
+      loanPinHash=hashPin(_legacyPin);
+      loanPinTs=Date.now();
+      localStorage.removeItem(PIN_KEY);
+    }
+  }catch(e){}
+}
 updateWeekLabel();
 renderDaily();
 
