@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Factory Wage Calculator</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -443,7 +446,7 @@ function addWorkerGlobal(){
   Object.keys(data).forEach(wk=>Object.keys(data[wk]).forEach(di=>{if(!data[wk][di].attendance[id])data[wk][di].attendance[id]=defaultAtt();}));
   render();
 }
-function deleteWorker(id){workers=workers.filter(w=>w.id!==id);render();}
+function deleteWorker(id){workers=workers.filter(w=>w.id!==id);if(typeof delW!=='undefined'&&delW.indexOf(id)<0)delW.push(id);render();}
 
 function render(){
   updateWeekLabel();
@@ -1171,25 +1174,29 @@ if(savedCloudUrl&&(savedCloudUrl.indexOf('script.google.com')>=0||savedCloudUrl.
   localStorage.removeItem('factoryWageCalc_url');
   savedCloudUrl=null;
 }
+const DELW_KEY='factoryWageCalc_delW';
 let cloudUrl=savedCloudUrl||DEFAULT_CLOUD_URL;
 let saveTimer=null;
-let isSaving=false;
+let syncing=false;
 let lastSyncTs=parseInt(localStorage.getItem(TS_KEY))||0;
+// worker-deletion tombstones (so a delete isn't undone by a merge from another device)
+let delW; try{delW=JSON.parse(localStorage.getItem(DELW_KEY)||'[]');}catch(e){delW=[];}
 
 function getState(){
-  return JSON.stringify({workers,data,nextWId,nextJId,nextCId,_ts:Date.now()});
+  return JSON.stringify({workers,data,nextWId,nextJId,nextCId,_delW:delW,_ts:Date.now()});
+}
+
+function applyState(s){
+  if(s.workers)workers=s.workers;
+  if(s.data)data=s.data;
+  if(s.nextWId)nextWId=s.nextWId;
+  if(s.nextJId)nextJId=s.nextJId;
+  if(s.nextCId)nextCId=s.nextCId;
+  if(s._delW)delW=s._delW;
 }
 
 function loadState(json){
-  try{
-    const s=JSON.parse(json);
-    if(s.workers)workers=s.workers;
-    if(s.data)data=s.data;
-    if(s.nextWId)nextWId=s.nextWId;
-    if(s.nextJId)nextJId=s.nextJId;
-    if(s.nextCId)nextCId=s.nextCId;
-    return s._ts||0;
-  }catch(e){return -1;}
+  try{const s=JSON.parse(json);applyState(s);return s._ts||0;}catch(e){return -1;}
 }
 
 function saveLocal(){
@@ -1199,6 +1206,7 @@ function saveLocal(){
     const parsed=JSON.parse(state);
     lastSyncTs=parsed._ts;
     localStorage.setItem(TS_KEY,String(lastSyncTs));
+    localStorage.setItem(DELW_KEY,JSON.stringify(delW));
   }catch(e){}
 }
 
@@ -1228,41 +1236,143 @@ function autoClearError(){
   },5000);
 }
 
-function saveToCloud(){
-  if(!cloudUrl){saveLocal();return;}
-  saveLocal();
-  if(isSaving)return;
-  isSaving=true;
-  setSyncStatus('saving','Saving...');
-  const ctrl=new AbortController();
-  const timeoutId=setTimeout(()=>ctrl.abort(),10000);
-  fetch(cloudUrl,{
-    method:'POST',
-    headers:{'Content-Type':'text/plain'},
-    body:getState(),
-    redirect:'follow',
-    signal:ctrl.signal
-  }).then(r=>r.text()).then(t=>{
-    clearTimeout(timeoutId);
-    setSyncStatus('saved','\u2713 Saved');
-    isSaving=false;
-  }).catch(e=>{
-    clearTimeout(timeoutId);
-    console.error('Cloud save error:',e);
-    setSyncStatus('error',e.name==='AbortError'?'\u26A0 Save timed out':'\u26A0 Save error');
-    isSaving=false;
-    autoClearError();
+// ===== MULTI-USER MERGE =====
+// The cloud store is ONE shared blob, so two people editing at once would
+// overwrite each other. Every sync MERGES local + cloud (a union of all
+// entries) instead of replacing one with the other, so nobody loses entries.
+function attIsDefault(att){
+  if(!att)return true;
+  const d=defaultAtt();
+  return att.status===d.status &&
+    (att.leaveTime||'19:00')===d.leaveTime &&
+    !att.halfPay && !att.customPay && !att.extraOT && !att.advance;
+}
+
+function mergeStates(s1,s2){
+  // A = older, B = newer; newer wins only on a true same-cell conflict
+  const A=(s1._ts||0)<=(s2._ts||0)?s1:s2;
+  const B=(s1._ts||0)<=(s2._ts||0)?s2:s1;
+  const delTomb=Array.from(new Set([...(A._delW||[]),...(B._delW||[])])).sort((a,b)=>a-b);
+  const wmap={};
+  (A.workers||[]).forEach(w=>{wmap[w.id]=w;});
+  (B.workers||[]).forEach(w=>{wmap[w.id]=w;});
+  const workers2=Object.keys(wmap).map(k=>wmap[k]).filter(w=>delTomb.indexOf(w.id)<0).sort((a,b)=>a.id-b.id);
+  const data2={};
+  const weeks=new Set([...Object.keys(A.data||{}),...Object.keys(B.data||{})]);
+  weeks.forEach(wk=>{
+    const ad=(A.data||{})[wk]||{}, bd=(B.data||{})[wk]||{};
+    const days=new Set([...Object.keys(ad),...Object.keys(bd)]);
+    data2[wk]={};
+    days.forEach(di=>{
+      const aDay=ad[di]||{}, bDay=bd[di]||{};
+      const aAtt=aDay.attendance||{}, bAtt=bDay.attendance||{};
+      const att={};
+      const wids=new Set([...Object.keys(aAtt),...Object.keys(bAtt)]);
+      wids.forEach(wid=>{
+        const aa=aAtt[wid], ba=bAtt[wid];
+        if(!attIsDefault(ba))att[wid]=ba;
+        else if(!attIsDefault(aa))att[wid]=aa;
+        else att[wid]=ba||aa;
+      });
+      const jmap={};
+      (aDay.jobs||[]).forEach(j=>{jmap[j.id]=j;});
+      (bDay.jobs||[]).forEach(j=>{jmap[j.id]=j;});
+      const jobs=Object.keys(jmap).map(k=>jmap[k]).sort((a,b)=>a.id-b.id);
+      data2[wk][di]={attendance:att,jobs:jobs};
+    });
+  });
+  return {
+    workers:workers2,data:data2,
+    nextWId:Math.max(A.nextWId||1,B.nextWId||1),
+    nextJId:Math.max(A.nextJId||1,B.nextJId||1),
+    nextCId:Math.max(A.nextCId||1,B.nextCId||1),
+    _delW:delTomb,
+    _ts:Math.max(A._ts||0,B._ts||0)
+  };
+}
+
+// Stable signature (sorted keys, no _ts) so we only push/redraw on real changes
+function sig(s){
+  return JSON.stringify(s,(k,v)=>{
+    if(k==='_ts')return undefined;
+    if(v&&typeof v==='object'&&!Array.isArray(v)){
+      const o={};Object.keys(v).sort().forEach(kk=>{o[kk]=v[kk];});return o;
+    }
+    return v;
   });
 }
+
+function isEditing(){
+  const el=document.activeElement;
+  if(!el)return false;
+  const t=el.tagName;
+  return t==='INPUT'||t==='SELECT'||t==='TEXTAREA';
+}
+
+// Apply a merged state to memory + cache + UI WITHOUT re-triggering a save loop
+function applyRemote(s){
+  applyState(s);
+  lastSyncTs=s._ts||Date.now();
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(s));
+    localStorage.setItem(TS_KEY,String(lastSyncTs));
+    localStorage.setItem(DELW_KEY,JSON.stringify(delW));
+  }catch(e){}
+  _origRender();
+}
+
+function pushCloud(s){
+  return fetch(cloudUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(s),redirect:'follow'});
+}
+
+// Core sync: GET cloud -> merge with local -> show others' entries -> push ours
+function syncCycle(opts){
+  opts=opts||{};
+  if(!cloudUrl){saveLocal();if(opts.cb)opts.cb();return;}
+  if(syncing){if(opts.cb)opts.cb();return;}
+  syncing=true;
+  if(opts.force)setSyncStatus('saving','Syncing...');
+  const ctrl=new AbortController();
+  const timeoutId=setTimeout(()=>ctrl.abort(),12000);
+  fetch(cloudUrl,{redirect:'follow',signal:ctrl.signal})
+    .then(r=>{ if(!r.ok)throw new Error('HTTP '+r.status); return r.text(); })
+    .then(txt=>{
+      clearTimeout(timeoutId);
+      let cloud=null; try{cloud=JSON.parse(txt);}catch(e){}
+      const localState=JSON.parse(getState());
+      const merged=(cloud&&cloud.workers)?mergeStates(localState,cloud):localState;
+      const mSig=sig(merged), lSig=sig(localState), cSig=cloud?sig(cloud):'';
+      const needApply=mSig!==lSig;
+      const needPush=mSig!==cSig;
+      if(needApply){
+        if(opts.force||!isEditing()){
+          applyRemote(merged);
+        } else {
+          try{localStorage.setItem(STORAGE_KEY,JSON.stringify(merged));}catch(e){}
+        }
+      }
+      if(needPush){
+        return pushCloud(merged).then(()=>{setSyncStatus('saved','\u2713 Synced');});
+      }
+      setSyncStatus('saved','\u2713 Synced');
+    })
+    .catch(e=>{
+      clearTimeout(timeoutId);
+      console.error('Sync error:',e);
+      setSyncStatus('error',e.name==='AbortError'?'\u26A0 Sync timed out':'\u26A0 Sync issue');
+      autoClearError();
+    })
+    .finally(()=>{ syncing=false; if(opts.cb)opts.cb(); });
+}
+
+function saveToCloud(){saveLocal();syncCycle();}
 
 // loadFromCloud: pulls cloud data; only applies if cloud is newer than local
 // (so failed saves don't get clobbered when the page reopens)
 function loadFromCloud(cb,opts){
   opts=opts||{};
-  if(!cloudUrl){
-    if(cb)cb();
-    return;
-  }
+  syncCycle({force:opts.force,cb:cb});
+  return; // legacy body below is unreachable (kept to avoid risky deletion)
   setSyncStatus('saving','Loading...');
   const ctrl=new AbortController();
   const timeoutId=setTimeout(()=>ctrl.abort(),10000);
@@ -1311,7 +1421,7 @@ function loadFromCloud(cb,opts){
 function scheduleSave(){
   saveLocal(); // always save to localStorage immediately
   clearTimeout(saveTimer);
-  saveTimer=setTimeout(saveToCloud,1500); // then sync to cloud after 1.5s
+  saveTimer=setTimeout(()=>syncCycle(),900); // then merge + sync to cloud
 }
 
 // Hook save into render
@@ -1353,30 +1463,60 @@ if(syncNowBtn){
 }
 
 // Save when page is closing/backgrounded so we don't lose data
-window.addEventListener('beforeunload',function(){
-  saveLocal();
-  if(cloudUrl){
-    try{
-      fetch(cloudUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:getState(),keepalive:true});
-    }catch(e){}
-  }
-});
+// On close: only persist locally. Do NOT blind-POST here — a plain overwrite
+// could clobber another person's concurrent edits. The merge sync on every
+// edit (900ms) and on backgrounding already pushed our data safely; any final
+// keystroke survives in localStorage and merges up on next open.
+window.addEventListener('beforeunload',function(){ saveLocal(); });
 document.addEventListener('visibilitychange',function(){
-  if(document.visibilityState==='hidden'){
-    saveLocal();
-    saveToCloud();
-  }
+  if(document.visibilityState==='hidden'){ saveLocal(); syncCycle(); }
+  else { syncCycle(); }
 });
+
+// ===== AUTO-UPDATE CHECK (so nobody is stuck on an old cached version) =====
+const APP_VERSION='2026-06-01a';
+(function(){
+  let v=document.getElementById('appVersion');
+  if(!v){
+    v=document.createElement('div');
+    v.id='appVersion';
+    v.style.cssText='position:fixed;right:6px;bottom:4px;font-size:10px;color:#aaa;z-index:50;pointer-events:none';
+    document.body.appendChild(v);
+  }
+  v.textContent='v'+APP_VERSION;
+})();
+function showUpdateBanner(){
+  if(document.getElementById('updateBanner'))return;
+  const b=document.createElement('div');
+  b.id='updateBanner';
+  b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#1a3a6b;color:#fff;padding:14px;text-align:center;font-weight:600;cursor:pointer;box-shadow:0 -2px 12px rgba(0,0,0,.25)';
+  b.textContent='New version available — tap to update';
+  b.addEventListener('click',()=>location.reload());
+  document.body.appendChild(b);
+}
+function checkForUpdate(){
+  fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'})
+    .then(r=>r.ok?r.text():'')
+    .then(html=>{
+      const m=html.match(/APP_VERSION='([^']+)'/);
+      if(m&&m[1]&&m[1]!==APP_VERSION)showUpdateBanner();
+    }).catch(()=>{});
+}
+setInterval(checkForUpdate,60000);
 
 // ===== INIT =====
 // Always render UI immediately with local data so the page never appears blank
-loadLocal();
+const _hadLocal=loadLocal();
+// A brand-new device must ADOPT the shared cloud data, not inject its default
+// seed workers (Worker 1 / Worker 2) into everyone else's roster.
+if(!_hadLocal && cloudUrl){ workers=[]; data={}; nextWId=1; nextJId=1; nextCId=1; }
 updateWeekLabel();
 renderDaily();
 
-// Then sync from cloud in background (timestamp-based merge prevents data loss)
+// Then merge-sync with cloud, and keep syncing live so 2-3 people stay in sync
 if(cloudUrl){
-  loadFromCloud(()=>{render();});
+  syncCycle({force:true});
+  setInterval(()=>{ if(!isEditing())syncCycle(); },5000);
 }
 </script>
 </body>
