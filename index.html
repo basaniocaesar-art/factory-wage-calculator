@@ -1248,15 +1248,45 @@ function attIsDefault(att){
     !att.halfPay && !att.customPay && !att.extraOT && !att.advance;
 }
 
+// Merge a worker's loan so a stale save can't wipe a loan someone else set.
+// la = older side's loan, lb = newer side's loan (either may be missing).
+function mergeLoan(la,lb){
+  const aHas=la&&(parseFloat(la.original)||0)>0;
+  const bHas=lb&&(parseFloat(lb.original)||0)>0;
+  if(aHas&&bHas){
+    // both have a real loan: same total -> keep the more-repaid (lower balance);
+    // different total -> newer wins
+    if((parseFloat(la.original)||0)===(parseFloat(lb.original)||0)){
+      return (parseFloat(la.balance)||0)<=(parseFloat(lb.balance)||0)?la:lb;
+    }
+    return lb;
+  }
+  if(aHas)return la;   // only older has it -> keep it (this is the bug we're fixing)
+  if(bHas)return lb;   // only newer has it
+  return lb||la;       // neither has a real loan
+}
+// Field-merge one worker record (newer wins, but never blank out a name or drop a loan)
+function mergeWorker(a,b){
+  if(!a)return b;
+  if(!b)return a;
+  const m=Object.assign({},a,b); // newer (b) wins by default
+  if((!b.name||!b.name.trim())&&a.name&&a.name.trim())m.name=a.name;
+  const lo=mergeLoan(a.loan,b.loan);
+  if(lo)m.loan=lo;else delete m.loan;
+  return m;
+}
+
 function mergeStates(s1,s2){
   // A = older, B = newer; newer wins only on a true same-cell conflict
   const A=(s1._ts||0)<=(s2._ts||0)?s1:s2;
   const B=(s1._ts||0)<=(s2._ts||0)?s2:s1;
   const delTomb=Array.from(new Set([...(A._delW||[]),...(B._delW||[])])).sort((a,b)=>a-b);
-  const wmap={};
-  (A.workers||[]).forEach(w=>{wmap[w.id]=w;});
-  (B.workers||[]).forEach(w=>{wmap[w.id]=w;});
-  const workers2=Object.keys(wmap).map(k=>wmap[k]).filter(w=>delTomb.indexOf(w.id)<0).sort((a,b)=>a.id-b.id);
+  const amap={},bmap={};
+  (A.workers||[]).forEach(w=>{amap[w.id]=w;});
+  (B.workers||[]).forEach(w=>{bmap[w.id]=w;});
+  const allWIds=new Set([...Object.keys(amap),...Object.keys(bmap)]);
+  const workers2=Array.from(allWIds).map(k=>mergeWorker(amap[k],bmap[k]))
+    .filter(w=>w&&delTomb.indexOf(w.id)<0).sort((a,b)=>a.id-b.id);
   const data2={};
   const weeks=new Set([...Object.keys(A.data||{}),...Object.keys(B.data||{})]);
   weeks.forEach(wk=>{
@@ -1474,7 +1504,7 @@ document.addEventListener('visibilitychange',function(){
 });
 
 // ===== AUTO-UPDATE CHECK (so nobody is stuck on an old cached version) =====
-const APP_VERSION='2026-06-01a';
+const APP_VERSION='2026-06-01b';
 (function(){
   let v=document.getElementById('appVersion');
   if(!v){
