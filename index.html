@@ -781,7 +781,7 @@ function renderWeekly(){
         const p=calcWorkerDay(w.id,wk,i);
         if(p.status==='absent')return`<td style="text-align:center"><span class="dot da" title="Absent"></span></td>`;
         const dc=p.status==='custom'?'dcu':p.status==='half'?'dh':p.ot>0||p.extraOT>0?'do2':'dp';
-        return`<td style="text-align:center;font-size:12px"><span class="dot ${dc}"></span><br>&#8377;${p.net}</td>`;
+        return`<td style="text-align:center;font-size:12px"><span class="dot ${dc}"></span><br>&#8377;${p.gross}</td>`;
       }).join('')}
       <td>&#8377;${week.gross.toLocaleString()}</td>
       <td style="color:var(--red)">${week.advance>0?'− &#8377;'+week.advance.toLocaleString():'—'}</td>
@@ -789,9 +789,9 @@ function renderWeekly(){
       <td style="text-align:right;font-weight:600;color:var(--accent)">&#8377;${week.net.toLocaleString()}</td>
     </tr>`;
   });
-  const colNets=Array.from({length:7},(_,i)=>workers.reduce((s,w)=>s+calcWorkerDay(w.id,wk,i).net,0));
+  const colGross=Array.from({length:7},(_,i)=>workers.reduce((s,w)=>s+calcWorkerDay(w.id,wk,i).gross,0));
   html+=`<tr class="total-row"><td>Total</td>
-    ${colNets.map(t=>`<td style="text-align:center;font-size:12px">${t>0?'&#8377;'+t.toLocaleString():'—'}</td>`).join('')}
+    ${colGross.map(t=>`<td style="text-align:center;font-size:12px">${t>0?'&#8377;'+t.toLocaleString():'—'}</td>`).join('')}
     <td>&#8377;${totGross.toLocaleString()}</td>
     <td style="color:var(--red)">${totAdv>0?'− &#8377;'+totAdv.toLocaleString():'—'}</td>
     <td style="color:var(--red)">${totLoan>0?'− &#8377;'+totLoan.toLocaleString():'—'}</td>
@@ -1531,7 +1531,7 @@ document.addEventListener('visibilitychange',function(){
 });
 
 // ===== AUTO-UPDATE CHECK (so nobody is stuck on an old cached version) =====
-const APP_VERSION='2026-06-01d';
+const APP_VERSION='2026-06-01e';
 (function(){
   let v=document.getElementById('appVersion');
   if(!v){
